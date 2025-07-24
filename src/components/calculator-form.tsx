@@ -100,22 +100,24 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
     const binding = bindingUnits * 500;
     const nails = Math.ceil(area / 200) * 50;
     
-    let totalCost = 0;
-    totalCost += panels * (values.panelPrice || 0);
-    totalCost += crossTees * (values.crossTeePrice || 0);
-    totalCost += mainTees * (values.mainTeePrice || 0);
-    totalCost += wallAngles * (values.wallAnglePrice || 0);
-    totalCost += bindingUnits * (values.bindingPrice || 0);
-    totalCost += nails * (values.nailPrice || 0);
+    const panelsCost = panels * (values.panelPrice || 0);
+    const crossTeesCost = crossTees * (values.crossTeePrice || 0);
+    const mainTeesCost = mainTees * (values.mainTeePrice || 0);
+    const wallAnglesCost = wallAngles * (values.wallAnglePrice || 0);
+    const bindingCost = bindingUnits * (values.bindingPrice || 0);
+    const nailsCost = nails * (values.nailPrice || 0);
 
-    totalCost += (values.ledBulbs || 0) * (values.ledBulbPrice || 0);
-    totalCost += (values.decorativeBulbs || 0) * (values.decorativeBulbPrice || 0);
-    totalCost += (values.rivets || 0) * (values.rivetPrice || 0);
-    totalCost += (values.superNails || 0) * (values.superNailPrice || 0);
-    totalCost += (values.silicone || 0) * (values.siliconePrice || 0);
-    totalCost += (values.extra || 0) * (values.extraPrice || 0);
+    const ledBulbsCost = (values.ledBulbs || 0) * (values.ledBulbPrice || 0);
+    const decorativeBulbsCost = (values.decorativeBulbs || 0) * (values.decorativeBulbPrice || 0);
+    const rivetsCost = (values.rivets || 0) * (values.rivetPrice || 0);
+    const superNailsCost = (values.superNails || 0) * (values.superNailPrice || 0);
+    const siliconeCost = (values.silicone || 0) * (values.siliconePrice || 0);
+    const extraCost = (values.extra || 0) * (values.extraPrice || 0);
 
-    const results = {
+    const totalCost = panelsCost + crossTeesCost + mainTeesCost + wallAnglesCost + bindingCost + nailsCost +
+                      ledBulbsCost + decorativeBulbsCost + rivetsCost + superNailsCost + siliconeCost + extraCost;
+
+    const results: CalculationResults = {
       panels,
       crossTees,
       mainTees,
@@ -129,6 +131,18 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
       silicone: values.silicone,
       extra: values.extra,
       totalCost,
+      panelsCost,
+      crossTeesCost,
+      mainTeesCost,
+      wallAnglesCost,
+      bindingCost,
+      nailsCost,
+      ledBulbsCost,
+      decorativeBulbsCost,
+      rivetsCost,
+      superNailsCost,
+      siliconeCost,
+      extraCost,
     };
     onCalculate(results);
   }, [onCalculate]);

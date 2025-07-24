@@ -12,4 +12,18 @@ export interface CalculationResults {
   silicone?: number;
   extra?: number;
   totalCost?: number;
+
+  // Costs for each item
+  panelsCost?: number;
+  crossTeesCost?: number;
+  mainTeesCost?: number;
+  wallAnglesCost?: number;
+  bindingCost?: number;
+  nailsCost?: number;
+  ledBulbsCost?: number;
+  decorativeBulbsCost?: number;
+  rivetsCost?: number;
+  superNailsCost?: number;
+  siliconeCost?: number;
+  extraCost?: number;
 }

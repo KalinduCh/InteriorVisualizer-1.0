@@ -13,21 +13,21 @@ export default function ResultsDisplay({ results }: { results: CalculationResult
   }
 
   const materials = [
-    { name: "Ceiling Panels", quantity: results.panels, unit: "panels", description: "2' x 2' panels", icon: <LayoutGrid className="w-8 h-8 text-primary" /> },
-    { name: "Cross Tees", quantity: results.crossTees, unit: "tees", description: "2 ft length", icon: <Minus className="w-8 h-8 text-primary" /> },
-    { name: "Main Tees", quantity: results.mainTees, unit: "tees", description: "12 ft length", icon: <MoveHorizontal className="w-8 h-8 text-primary" /> },
-    { name: "Wall Angles", quantity: results.wallAngles, unit: "angles", description: "10 ft length", icon: <Baseline className="w-8 h-8 text-primary" /> },
-    { name: "Binding Wire", quantity: results.binding, unit: "grams", description: `Est. ${results.binding}g`, icon: <LinkIcon className="w-8 h-8 text-primary" /> },
-    { name: "Nails", quantity: results.nails, unit: "nails", description: `Est. ${results.nails}`, icon: <Dot className="w-8 h-8 text-primary" /> }
+    { name: "Ceiling Panels", quantity: results.panels, unit: "panels", description: "2' x 2' panels", icon: <LayoutGrid className="w-8 h-8 text-primary" />, cost: results.panelsCost },
+    { name: "Cross Tees", quantity: results.crossTees, unit: "tees", description: "2 ft length", icon: <Minus className="w-8 h-8 text-primary" />, cost: results.crossTeesCost },
+    { name: "Main Tees", quantity: results.mainTees, unit: "tees", description: "12 ft length", icon: <MoveHorizontal className="w-8 h-8 text-primary" />, cost: results.mainTeesCost },
+    { name: "Wall Angles", quantity: results.wallAngles, unit: "angles", description: "10 ft length", icon: <Baseline className="w-8 h-8 text-primary" />, cost: results.wallAnglesCost },
+    { name: "Binding Wire", quantity: results.binding, unit: "grams", description: `Est. ${results.binding}g`, icon: <LinkIcon className="w-8 h-8 text-primary" />, cost: results.bindingCost },
+    { name: "Nails", quantity: results.nails, unit: "nails", description: `Est. ${results.nails}`, icon: <Dot className="w-8 h-8 text-primary" />, cost: results.nailsCost }
   ];
   
   const optionalItems = [
-    { name: "LED Bulbs", quantity: results.ledBulbs, unit: "bulbs", icon: <Lightbulb className="w-8 h-8 text-primary" /> },
-    { name: "Decorative Bulbs", quantity: results.decorativeBulbs, unit: "bulbs", icon: <PartyPopper className="w-8 h-8 text-primary" /> },
-    { name: "Rivets", quantity: results.rivets, unit: "rivets", icon: <Pin className="w-8 h-8 text-primary" /> },
-    { name: "Super Nails", quantity: results.superNails, unit: "nails", icon: <Construction className="w-8 h-8 text-primary" /> },
-    { name: "Silicone", quantity: results.silicone, unit: "tubes", icon: <Package className="w-8 h-8 text-primary" /> },
-    { name: "Extra", quantity: results.extra, unit: "items", icon: <Package className="w-8 h-8 text-primary" /> },
+    { name: "LED Bulbs", quantity: results.ledBulbs, unit: "bulbs", icon: <Lightbulb className="w-8 h-8 text-primary" />, cost: results.ledBulbsCost },
+    { name: "Decorative Bulbs", quantity: results.decorativeBulbs, unit: "bulbs", icon: <PartyPopper className="w-8 h-8 text-primary" />, cost: results.decorativeBulbsCost },
+    { name: "Rivets", quantity: results.rivets, unit: "rivets", icon: <Pin className="w-8 h-8 text-primary" />, cost: results.rivetsCost },
+    { name: "Super Nails", quantity: results.superNails, unit: "nails", icon: <Construction className="w-8 h-8 text-primary" />, cost: results.superNailsCost },
+    { name: "Silicone", quantity: results.silicone, unit: "tubes", icon: <Package className="w-8 h-8 text-primary" />, cost: results.siliconeCost },
+    { name: "Extra", quantity: results.extra, unit: "items", icon: <Package className="w-8 h-8 text-primary" />, cost: results.extraCost },
   ].filter(item => item.quantity && item.quantity > 0);
 
   return (
@@ -44,7 +44,7 @@ export default function ResultsDisplay({ results }: { results: CalculationResult
           <h2 className="text-2xl font-bold my-8 text-center md:text-left">Optional Items</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {optionalItems.map((item) => (
-              <ResultCard key={item.name} name={item.name} quantity={item.quantity!} unit={item.unit} icon={item.icon} description={`${item.quantity} ${item.unit}`} />
+              <ResultCard key={item.name} name={item.name} quantity={item.quantity!} unit={item.unit} icon={item.icon} description={`${item.quantity} ${item.unit}`} cost={item.cost} />
             ))}
           </div>
         </>
