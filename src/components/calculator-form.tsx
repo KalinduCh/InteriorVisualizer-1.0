@@ -96,7 +96,8 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
     const mainTeeTotalLength = mainTeeRows * L;
     const mainTees = Math.ceil(mainTeeTotalLength / 12);
     const wallAngles = Math.ceil(perimeter / 10);
-    const binding = Math.ceil(area / 200) * 500;
+    const bindingUnits = Math.ceil(area / 200);
+    const binding = bindingUnits * 500;
     const nails = Math.ceil(area / 200) * 50;
     
     let totalCost = 0;
@@ -104,7 +105,7 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
     totalCost += crossTees * (values.crossTeePrice || 0);
     totalCost += mainTees * (values.mainTeePrice || 0);
     totalCost += wallAngles * (values.wallAnglePrice || 0);
-    totalCost += binding * (values.bindingPrice || 0);
+    totalCost += bindingUnits * (values.bindingPrice || 0);
     totalCost += nails * (values.nailPrice || 0);
 
     totalCost += (values.ledBulbs || 0) * (values.ledBulbPrice || 0);
@@ -138,6 +139,11 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
         onCalculate(results);
       }
     });
+    // Fire once on initial load
+    const results = calculateMaterials(form.getValues());
+    if (results) {
+      onCalculate(results);
+    }
     return () => subscription.unsubscribe();
   }, [watch, onCalculate]);
 
@@ -219,7 +225,7 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
                  <FormField control={control} name="crossTeePrice" render={({ field }) => (<FormItem><FormLabel>Cross Tee Price</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
                  <FormField control={control} name="mainTeePrice" render={({ field }) => (<FormItem><FormLabel>Main Tee Price</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
                  <FormField control={control} name="wallAnglePrice" render={({ field }) => (<FormItem><FormLabel>Wall Angle Price</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
-                 <FormField control={control} name="bindingPrice" render={({ field }) => (<FormItem><FormLabel>Binding Wire Price (per gram)</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                 <FormField control={control} name="bindingPrice" render={({ field }) => (<FormItem><FormLabel>Binding Wire Price (per 500g)</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
                  <FormField control={control} name="nailPrice" render={({ field }) => (<FormItem><FormLabel>Nail Price (per nail)</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
               </AccordionContent>
             </AccordionItem>
