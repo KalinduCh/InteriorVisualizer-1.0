@@ -9,7 +9,7 @@ import { PanelsTopLeft } from 'lucide-react';
 export default function Home() {
   const [results, setResults] = useState<CalculationResults | null>(null);
 
-  const handleCalculate = useCallback((newResults: CalculationResults) => {
+  const handleCalculate = useCallback((newResults: CalculationResults | null) => {
     setResults(newResults);
   }, []);
   

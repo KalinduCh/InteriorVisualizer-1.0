@@ -45,7 +45,7 @@ const formSchema = z.object({
 });
 
 type CalculatorFormProps = {
-  onCalculate: (results: CalculationResults) => void;
+  onCalculate: (results: CalculationResults | null) => void;
   onReset: () => void;
 };
 
@@ -80,9 +80,9 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
 
   const calculateMaterials = useCallback((values: z.infer<typeof formSchema>) => {
     const { length, width } = values;
-    if (!length || !width || length <= 0 || width <= 0) {
-      onReset();
-      return null;
+    if (isNaN(length) || isNaN(width) || length <= 0 || width <= 0) {
+      onCalculate(null);
+      return;
     }
     const area = length * width;
     const perimeter = 2 * (length + width);
@@ -131,12 +131,14 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
       totalCost,
     };
     onCalculate(results);
-    return results;
-  }, [onCalculate, onReset]);
+  }, [onCalculate]);
 
   useEffect(() => {
-    const subscription = watch((values) => {
-      calculateMaterials(values as z.infer<typeof formSchema>);
+    const subscription = watch((values, { name }) => {
+      // Only recalculate if a relevant field changes
+      if (name?.endsWith('Price') || name === 'length' || name === 'width' || name === 'ledBulbs' || name === 'decorativeBulbs' || name === 'rivets' || name === 'superNails' || name === 'silicone' || name === 'extra') {
+         calculateMaterials(values as z.infer<typeof formSchema>);
+      }
     });
     // Fire once on initial load
     calculateMaterials(getValues());
@@ -150,8 +152,8 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
   
   const handleResetClick = () => {
     reset({
-      length: 0,
-      width: 0,
+      length: undefined,
+      width: undefined,
       panelPrice: 0,
       crossTeePrice: 0,
       mainTeePrice: 0,
@@ -190,7 +192,7 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
                 <FormItem>
                   <FormLabel>Length (ft)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g. 12" {...field} step="0.1" />
+                    <Input type="number" placeholder="e.g. 12" {...field} step="0.1" onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -203,7 +205,7 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
                 <FormItem>
                   <FormLabel>Width (ft)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g. 12" {...field} step="0.1" />
+                    <Input type="number" placeholder="e.g. 12" {...field} step="0.1" onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
