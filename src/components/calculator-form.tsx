@@ -76,8 +76,7 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
     },
   });
 
-  const { handleSubmit, control, reset, watch } = form;
-  const watchedValues = watch();
+  const { handleSubmit, control, reset, watch, getValues } = form;
 
   const calculateMaterials = (values: z.infer<typeof formSchema>) => {
     const { length, width } = values;
@@ -140,12 +139,12 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
       }
     });
     // Fire once on initial load
-    const results = calculateMaterials(form.getValues());
+    const results = calculateMaterials(getValues());
     if (results) {
       onCalculate(results);
     }
     return () => subscription.unsubscribe();
-  }, [watch, onCalculate]);
+  }, [watch, onCalculate, getValues]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const results = calculateMaterials(values);

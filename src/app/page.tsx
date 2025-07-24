@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import CalculatorForm from '@/components/calculator-form';
 import ResultsDisplay from '@/components/results-display';
 import type { CalculationResults } from '@/types';
@@ -9,13 +9,13 @@ import { PanelsTopLeft } from 'lucide-react';
 export default function Home() {
   const [results, setResults] = useState<CalculationResults | null>(null);
 
-  const handleCalculate = (newResults: CalculationResults) => {
+  const handleCalculate = useCallback((newResults: CalculationResults) => {
     setResults(newResults);
-  };
+  }, []);
   
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setResults(null);
-  }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
