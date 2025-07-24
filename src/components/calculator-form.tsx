@@ -51,8 +51,8 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
     const mainTeeTotalLength = mainTeeRows * L;
     
     const results: CalculationResults = {
-      panels: Math.ceil((area / 4) * 1.1),
-      crossTees: Math.ceil((area / 4) * 1.1),
+      panels: Math.ceil(area / 4),
+      crossTees: Math.ceil(area / 4),
       mainTees: Math.ceil(mainTeeTotalLength / 12),
       wallAngles: Math.ceil(perimeter / 10),
       binding: Math.ceil(area / 200) * 500,

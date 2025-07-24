@@ -28,8 +28,8 @@ export default function Home() {
     const mainTeeTotalLength = mainTeeRows * L;
     
     const initialResults: CalculationResults = {
-      panels: Math.ceil((area / 4) * 1.1),
-      crossTees: Math.ceil((area / 4) * 1.1),
+      panels: Math.ceil(area / 4),
+      crossTees: Math.ceil(area / 4),
       mainTees: Math.ceil(mainTeeTotalLength / 12),
       wallAngles: Math.ceil(perimeter / 10),
       binding: Math.ceil(area / 200) * 500,
