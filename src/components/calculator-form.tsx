@@ -94,7 +94,7 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
     const mainTeeRows = Math.floor((W - 0.1) / 2);
     const mainTeeTotalLength = mainTeeRows * L;
     const mainTees = Math.ceil(mainTeeTotalLength / 12);
-    const wallAngles = Math.ceil(perimeter / 10);
+    const wallAngles = Math.ceil(perimeter / 4);
     const bindingUnits = Math.ceil(area / 200);
     const binding = bindingUnits * 500;
     const nails = Math.ceil(area / 200) * 50;
