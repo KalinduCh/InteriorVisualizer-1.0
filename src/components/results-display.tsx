@@ -7,7 +7,7 @@ export default function ResultsDisplay({ results }: { results: CalculationResult
   if (!results) {
     return (
       <div className="flex items-center justify-center h-full min-h-[400px] bg-card rounded-lg border border-dashed">
-        <p className="text-muted-foreground text-center p-4">Enter dimensions and click Calculate to see the required materials and costs.</p>
+        <p className="text-muted-foreground text-center p-4">Enter dimensions and prices to see the required materials and costs.</p>
       </div>
     );
   }
@@ -17,8 +17,8 @@ export default function ResultsDisplay({ results }: { results: CalculationResult
     { name: "Cross Tees", quantity: results.crossTees, unit: "tees", description: "2 ft length", icon: <Minus className="w-8 h-8 text-primary" /> },
     { name: "Main Tees", quantity: results.mainTees, unit: "tees", description: "12 ft length", icon: <MoveHorizontal className="w-8 h-8 text-primary" /> },
     { name: "Wall Angles", quantity: results.wallAngles, unit: "angles", description: "10 ft length", icon: <Baseline className="w-8 h-8 text-primary" /> },
-    { name: "Binding Wire", quantity: results.binding, unit: "grams", description: "Est. 500g per 200 sq ft", icon: <LinkIcon className="w-8 h-8 text-primary" /> },
-    { name: "Nails", quantity: results.nails, unit: "nails", description: "Est. 50 per 200 sq ft", icon: <Dot className="w-8 h-8 text-primary" /> }
+    { name: "Binding Wire", quantity: results.binding, unit: "grams", description: `Est. ${results.binding}g`, icon: <LinkIcon className="w-8 h-8 text-primary" /> },
+    { name: "Nails", quantity: results.nails, unit: "nails", description: `Est. ${results.nails}`, icon: <Dot className="w-8 h-8 text-primary" /> }
   ];
   
   const optionalItems = [
@@ -60,7 +60,7 @@ export default function ResultsDisplay({ results }: { results: CalculationResult
           </CardHeader>
           <CardContent>
             <span className="text-5xl font-bold text-accent">
-              ${results.totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              LKR {results.totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </CardContent>
         </Card>
