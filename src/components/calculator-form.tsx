@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -78,9 +78,10 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
 
   const { handleSubmit, control, reset, watch, getValues } = form;
 
-  const calculateMaterials = (values: z.infer<typeof formSchema>) => {
+  const calculateMaterials = useCallback((values: z.infer<typeof formSchema>) => {
     const { length, width } = values;
     if (!length || !width || length <= 0 || width <= 0) {
+      onReset();
       return null;
     }
     const area = length * width;
@@ -94,7 +95,7 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
     const mainTeeRows = Math.floor((W - 0.1) / 2);
     const mainTeeTotalLength = mainTeeRows * L;
     const mainTees = Math.ceil(mainTeeTotalLength / 12);
-    const wallAngles = Math.ceil(perimeter / 4);
+    const wallAngles = Math.ceil(perimeter / 10);
     const bindingUnits = Math.ceil(area / 200);
     const binding = bindingUnits * 500;
     const nails = Math.ceil(area / 200) * 50;
@@ -114,7 +115,7 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
     totalCost += (values.silicone || 0) * (values.siliconePrice || 0);
     totalCost += (values.extra || 0) * (values.extraPrice || 0);
 
-    return {
+    const results = {
       panels,
       crossTees,
       mainTees,
@@ -129,28 +130,22 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
       extra: values.extra,
       totalCost,
     };
-  }
+    onCalculate(results);
+    return results;
+  }, [onCalculate, onReset]);
 
   useEffect(() => {
     const subscription = watch((values) => {
-      const results = calculateMaterials(values as z.infer<typeof formSchema>);
-      if (results) {
-        onCalculate(results);
-      }
+      calculateMaterials(values as z.infer<typeof formSchema>);
     });
     // Fire once on initial load
-    const results = calculateMaterials(getValues());
-    if (results) {
-      onCalculate(results);
-    }
+    calculateMaterials(getValues());
+    
     return () => subscription.unsubscribe();
-  }, [watch, onCalculate, getValues]);
+  }, [watch, calculateMaterials, getValues]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const results = calculateMaterials(values);
-    if(results) {
-      onCalculate(results);
-    }
+    calculateMaterials(values);
   }
   
   const handleResetClick = () => {
