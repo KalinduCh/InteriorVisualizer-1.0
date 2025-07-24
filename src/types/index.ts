@@ -5,4 +5,11 @@ export interface CalculationResults {
   wallAngles: number;
   binding: number;
   nails: number;
+  ledBulbs?: number;
+  decorativeBulbs?: number;
+  rivets?: number;
+  superNails?: number;
+  silicone?: number;
+  extra?: number;
+  totalCost?: number;
 }

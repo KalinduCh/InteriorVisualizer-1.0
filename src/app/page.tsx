@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import CalculatorForm from '@/components/calculator-form';
 import ResultsDisplay from '@/components/results-display';
 import type { CalculationResults } from '@/types';
@@ -16,27 +16,6 @@ export default function Home() {
   const handleReset = () => {
     setResults(null);
   }
-
-  useEffect(() => {
-    const length = 12;
-    const width = 12;
-    const area = length * width;
-    const perimeter = 2 * (length + width);
-    const L = Math.max(length, width);
-    const W = Math.min(length, width);
-    const mainTeeRows = Math.floor((W - 0.1) / 2);
-    const mainTeeTotalLength = mainTeeRows * L;
-    
-    const initialResults: CalculationResults = {
-      panels: Math.ceil(area / 4),
-      crossTees: Math.ceil(area / 4),
-      mainTees: Math.ceil(mainTeeTotalLength / 12),
-      wallAngles: Math.ceil(perimeter / 10),
-      binding: Math.ceil(area / 200) * 500,
-      nails: Math.ceil(area / 200) * 50,
-    };
-    handleCalculate(initialResults);
-  }, []);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -54,7 +33,7 @@ export default function Home() {
             Suspended Ceiling Calculator
           </h2>
           <p className="text-lg text-muted-foreground mt-3 max-w-2xl mx-auto">
-            Instantly estimate the materials required for your 2x2 grid ceiling project. Enter your room dimensions to get started.
+            Instantly estimate the materials and cost for your 2x2 grid ceiling project. Enter your room dimensions and prices to get started.
           </p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
