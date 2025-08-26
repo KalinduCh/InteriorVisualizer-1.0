@@ -172,7 +172,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     const generatedPanels = generatePanelsFromStyle(values, panelsNeeded);
     
     // This is a "controlled" way to update the field array
-    setValue('panels', generatedPanels, { shouldValidate: true, shouldDirty: true });
+    setValue('panels', generatedPanels, { shouldValidate: false, shouldDirty: true });
 
     const clipsPerPanel = values.clipsPerPanel || 3;
     const clips = panelsNeeded * clipsPerPanel;
@@ -212,7 +212,9 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
   
 
   useEffect(() => {
-    const subscription = watch((values) => {
+    const subscription = watch((values, { name, type }) => {
+       // Exit early if the change was triggered by `setValue` to avoid loops
+      if (type === 'setValue') return;
       calculateMaterials(values as z.infer<typeof formSchema>);
     });
     calculateMaterials(getValues());
@@ -247,7 +249,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                 <FormItem>
                   <FormLabel>Wall Width (ft)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g. 10" {...field} step="0.1" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
+                    <Input type="number" placeholder="e.g. 10" {...field} step="0.1" value={field.value ?? 0} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -260,7 +262,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                 <FormItem>
                   <FormLabel>Wall Height (ft)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g. 9.5" {...field} step="0.1" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
+                    <Input type="number" placeholder="e.g. 9.5" {...field} step="0.1" value={field.value ?? 0} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -306,7 +308,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
             <AccordionItem value="item-1">
               <AccordionTrigger>Panel Configuration</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
-                 <FormField control={control} name="panelPrice" render={({ field }) => (<FormItem><FormLabel>Price per Panel</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                 <FormField control={control} name="panelPrice" render={({ field }) => (<FormItem><FormLabel>Price per Panel</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" /></FormControl></FormItem>)} />
                  <FormField
                     control={control}
                     name="designStyle"
@@ -445,7 +447,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                       </FormItem>
                     )}
                   />
-                  <FormField control={control} name="clipPrice" render={({ field }) => (<FormItem><FormLabel>Clip Price (incl. screw/plug)</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                  <FormField control={control} name="clipPrice" render={({ field }) => (<FormItem><FormLabel>Clip Price (incl. screw/plug)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" /></FormControl></FormItem>)} />
               </AccordionContent>
             </AccordionItem>
 
@@ -453,8 +455,8 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
               <AccordionTrigger>LED Lighting</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
                  <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="ledStripLength" render={({ field }) => (<FormItem><FormLabel>LED Strip (ft)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                  <FormField control={control} name="ledStripPricePerMeter" render={({ field }) => (<FormItem><FormLabel>Price/Meter</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                  <FormField control={control} name="ledStripLength" render={({ field }) => (<FormItem><FormLabel>LED Strip (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
+                  <FormField control={control} name="ledStripPricePerMeter" render={({ field }) => (<FormItem><FormLabel>Price/Meter</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" /></FormControl></FormItem>)} />
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -463,8 +465,8 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
               <AccordionTrigger>Wall Stickers</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
                  <div className="grid grid-cols-2 gap-4">
-                    <FormField control={control} name="sticker.quantity" render={({ field }) => (<FormItem><FormLabel>Sticker Quantity</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                    <FormField control={control} name="sticker.price" render={({ field }) => (<FormItem><FormLabel>Price/Sticker</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                    <FormField control={control} name="sticker.quantity" render={({ field }) => (<FormItem><FormLabel>Sticker Quantity</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
+                    <FormField control={control} name="sticker.price" render={({ field }) => (<FormItem><FormLabel>Price/Sticker</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" /></FormControl></FormItem>)} />
                  </div>
                  <FormField
                     control={control}
@@ -501,5 +503,3 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     </Card>
   );
 }
-
-    
