@@ -1,7 +1,7 @@
 
 import type { WallDesignerCalculationResults } from "@/types";
 import ResultCard from "./result-card";
-import { CircleDollarSign, Cog, LayoutPanelLeft, Lightbulb, Package, Pin, StickyNote } from "lucide-react";
+import { CircleDollarSign, Cog, LayoutPanelLeft, Lightbulb, Package, Pin, Tv } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -14,7 +14,7 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
     );
   }
   
-  const hasStickers = results.sticker && results.sticker.quantity && results.sticker.quantity > 0;
+  const hasFeatureArea = results.featureArea && (results.featureArea.width ?? 0) > 0 && (results.featureArea.height ?? 0) > 0;
   const hasLed = results.ledStripMeters > 0;
 
   const materials = [
@@ -27,8 +27,8 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
   if (hasLed) {
     materials.push({ name: "LED Strip", quantity: results.ledStripMeters, unit: "meters", description: "Lighting strips", icon: <Lightbulb className="w-8 h-8 text-primary" />, cost: results.ledStripCost });
   }
-  if (hasStickers) {
-    materials.push({ name: "Wall Stickers", quantity: results.sticker.quantity!, unit: "stickers", description: `${results.sticker.orientation}`, icon: <StickyNote className="w-8 h-8 text-primary" />, cost: results.stickerCost });
+  if (hasFeatureArea) {
+    materials.push({ name: "Feature Area", quantity: 1, unit: "area", description: `${results.featureArea.width}ft x ${results.featureArea.height}ft`, icon: <Tv className="w-8 h-8 text-primary" />, cost: results.featureAreaCost });
   }
 
 
@@ -59,5 +59,3 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
     </div>
   );
 }
-
-    

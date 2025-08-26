@@ -1,5 +1,6 @@
 
 
+
 export interface CeilingCalculationResults {
   panels: number;
   crossTees: number;
@@ -36,10 +37,12 @@ export type Panel = {
   color: PanelColor;
 };
 
-export type Sticker = {
-  quantity?: number;
-  price?: number;
-  orientation?: 'vertical' | 'horizontal';
+export type FeatureArea = {
+  width?: number;
+  height?: number;
+  color?: 'white-gold' | 'white-blue' | 'black' | 'texture';
+  blur?: boolean;
+  cost?: number;
 };
 
 export type CustomPatternSegment = {
@@ -59,7 +62,9 @@ export interface WallDesignerCalculationResults {
   rollPlugs: number;
 
   ledStripMeters: number;
-  sticker: Sticker;
+  ledColor?: 'warm-white' | 'cool-white';
+  
+  featureArea: FeatureArea;
   
   totalCost?: number;
 
@@ -67,7 +72,5 @@ export interface WallDesignerCalculationResults {
   panelsCost?: number;
   clipsCost?: number;
   ledStripCost?: number;
-  stickerCost?: number;
+  featureAreaCost?: number;
 }
-
-    

@@ -12,13 +12,25 @@ type WallVisualizerProps = {
 
 const VISUALIZER_MAX_WIDTH = 800; // in pixels
 
-const colorMap = {
+const panelColorMap = {
     'white-gold': 'from-slate-50 to-slate-200',
     'teak': 'from-yellow-700 to-yellow-900',
     'black-gold': 'from-gray-800 to-gray-950',
 };
+const panelGoldStripe = "absolute top-0 left-1/2 -translate-x-1/2 h-full w-[2px] bg-amber-400/50";
 
-const goldStripe = "absolute top-0 left-1/2 -translate-x-1/2 h-full w-[2px] bg-amber-400/50";
+
+const featureAreaColorMap = {
+    'white-gold': 'bg-gradient-to-br from-slate-50 to-slate-300 border-slate-300',
+    'white-blue': 'bg-gradient-to-br from-sky-50 to-sky-200 border-sky-300',
+    'black': 'bg-black border-gray-700',
+    'texture': 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-700 via-gray-900 to-black border-gray-600',
+};
+
+const ledGlowMap = {
+    'warm-white': 'shadow-[0_0_25px_8px_rgba(255,214,148,0.6)]',
+    'cool-white': 'shadow-[0_0_25px_8px_rgba(200,220,255,0.7)]',
+}
 
 export default function WallVisualizer({ results }: WallVisualizerProps) {
   if (!results || !results.wallWidth || !results.wallHeight || !results.panels || results.panels.length === 0) {
@@ -29,7 +41,7 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
     );
   }
 
-  const { wallWidth, wallHeight, panels, sticker, ledStripMeters } = results;
+  const { wallWidth, wallHeight, panels, featureArea, ledStripMeters, ledColor } = results;
 
   const aspectRatio = wallWidth / wallHeight;
   const visualizerWidth = VISUALIZER_MAX_WIDTH;
@@ -53,14 +65,17 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
   }
   
   const panelWidthPercentage = (1 / panels.length) * 100;
-  const hasStickers = sticker && sticker.quantity && sticker.quantity > 0;
+  const hasFeatureArea = featureArea && (featureArea.width ?? 0) > 0 && (featureArea.height ?? 0) > 0;
   const hasLed = ledStripMeters > 0;
+
+  const featureAreaWidth = hasFeatureArea ? (featureArea.width! / wallWidth) * 100 : 0;
+  const featureAreaHeight = hasFeatureArea ? (featureArea.height! / wallHeight) * 100 : 0;
+
 
   return (
     <div className="mb-8">
       <h3 className="text-lg font-semibold text-center mb-2">2D Visualizer</h3>
       <div className="relative" style={{ width: `${visualizerWidth}px`, height: `${visualizerHeight}px`, maxWidth: '100%' }}>
-         {hasLed && <div className="absolute -top-2 left-0 w-full h-2 bg-amber-200/80 blur-sm" />}
         <Card className="relative overflow-hidden h-full w-full">
           <CardContent className="p-0 h-full w-full bg-muted/30 flex flex-row relative">
               {panels.map((panel, index) => {
@@ -70,29 +85,31 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
                   };
                   const hasGoldStripe = panel.color === 'white-gold' || panel.color === 'black-gold';
                   return (
-                      <div key={index} className={cn("border-r border-black/20 relative bg-gradient-to-r", colorMap[panel.color])} style={panelStyle}>
-                          {hasGoldStripe && <div className={goldStripe} />}
+                      <div key={index} className={cn("border-r border-black/20 relative bg-gradient-to-r", panelColorMap[panel.color])} style={panelStyle}>
+                          {hasGoldStripe && <div className={panelGoldStripe} />}
                       </div>
                   )
               })}
-              {hasStickers && Array.from({ length: sticker.quantity! }).map((_, i) => (
-                  <div 
-                      key={`sticker-${i}`} 
-                      className={cn(
-                          "absolute bg-slate-500/30 backdrop-blur-sm border-2 border-slate-400/50 rounded-lg",
-                          sticker.orientation === 'vertical' ? 'w-10 h-32' : 'w-32 h-10'
-                      )}
-                      style={{
-                          top: `${20 + i * 10}%`,
-                          left: `${20 + i * 15}%`,
-                      }}
-                  ></div>
-              ))}
-              <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-1/2 h-1/2 bg-black/80 rounded-lg border-4 border-gray-600 flex items-center justify-center">
-                      <Tv2 className="w-16 h-16 text-gray-400/50" />
+              {hasFeatureArea && (
+                  <div
+                     className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-lg"
+                     style={{
+                        width: `${featureAreaWidth}%`,
+                        height: `${featureAreaHeight}%`,
+                     }}
+                  >
+                    <div className={cn(
+                        "h-full w-full rounded-lg border-2",
+                        featureArea.color && featureAreaColorMap[featureArea.color],
+                        featureArea.blur && 'backdrop-blur-sm bg-opacity-50',
+                        hasLed && ledColor && ledGlowMap[ledColor]
+                    )}>
+                        <div className="w-full h-full flex items-center justify-center">
+                             <Tv2 className="w-1/2 h-1/2 text-gray-400/50" />
+                        </div>
+                    </div>
                   </div>
-              </div>
+              )}
           </CardContent>
         </Card>
       </div>

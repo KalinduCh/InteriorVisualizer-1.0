@@ -23,15 +23,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { WallDesignerCalculationResults, Panel, CustomPatternSegment } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
 
 const panelSchema = z.object({
   color: z.enum(['white-gold', 'teak', 'black-gold']).default('white-gold'),
 });
 
-const stickerSchema = z.object({
-  quantity: z.coerce.number().min(0).default(0),
-  price: z.coerce.number().min(0).default(0),
-  orientation: z.enum(['vertical', 'horizontal']).default('vertical'),
+const featureAreaSchema = z.object({
+  width: z.coerce.number().min(0).default(0),
+  height: z.coerce.number().min(0).default(0),
+  color: z.enum(['white-gold', 'white-blue', 'black', 'texture']).default('black'),
+  blur: z.boolean().default(true),
+  cost: z.coerce.number().min(0).default(0),
 });
 
 const customPatternSegmentSchema = z.object({
@@ -62,8 +65,9 @@ const formSchema = z.object({
   
   ledStripLength: z.coerce.number().min(0).default(0),
   ledStripPricePerMeter: z.coerce.number().min(0).default(0),
+  ledColor: z.enum(['warm-white', 'cool-white']).default('warm-white'),
 
-  sticker: stickerSchema,
+  featureArea: featureAreaSchema,
 });
 
 type WallDesignerFormProps = {
@@ -137,15 +141,17 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      wallWidth: undefined,
-      wallHeight: undefined,
+      wallWidth: 10,
+      wallHeight: 9.5,
       panelPrice: 0,
+      panelType: '6-inch',
       panels: [],
       clipsPerPanel: 3,
       clipPrice: 0,
       ledStripLength: 0,
       ledStripPricePerMeter: 0,
-      sticker: { quantity: 0, price: 0, orientation: 'vertical' },
+      ledColor: 'warm-white',
+      featureArea: { width: 5, height: 3, color: 'black', blur: true, cost: 0 },
       designStyle: 'solid',
       primaryColor: 'teak',
       secondaryColor: 'white-gold',
@@ -183,13 +189,13 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     const ledStripFeet = values.ledStripLength || 0;
     const ledStripMeters = parseFloat((ledStripFeet / 3.281).toFixed(2));
     
-    const stickerCost = (values.sticker?.quantity || 0) * (values.sticker?.price || 0);
+    const featureAreaCost = values.featureArea?.cost || 0;
 
     const panelsCost = panelsNeeded * (values.panelPrice || 0);
     const clipsCost = clips * (values.clipPrice || 0);
     const ledStripCost = ledStripMeters * (values.ledStripPricePerMeter || 0);
     
-    const totalCost = panelsCost + clipsCost + ledStripCost + stickerCost;
+    const totalCost = panelsCost + clipsCost + ledStripCost + featureAreaCost;
     
     const results: WallDesignerCalculationResults = {
       wallWidth,
@@ -201,12 +207,13 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
       screws,
       rollPlugs,
       ledStripMeters,
-      sticker: values.sticker,
+      ledColor: values.ledColor,
+      featureArea: values.featureArea,
       totalCost,
       panelsCost,
       clipsCost,
       ledStripCost,
-      stickerCost,
+      featureAreaCost,
     };
     onCalculate(results);
   }, [onCalculate]);
@@ -225,18 +232,25 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
   }
   
   const designStyle = watch('designStyle');
+  const ledStripLength = watch('ledStripLength');
 
   // Trigger calculation when dimensions or style changes
-  const wallWidth = watch('wallWidth');
-  const wallHeight = watch('wallHeight');
-  const panelType = watch('panelType');
-  const primaryColor = watch('primaryColor');
-  const secondaryColor = watch('secondaryColor');
-  const customPattern = watch('customPattern');
-
   useEffect(() => {
+    const subscription = watch((values, { name }) => {
+      const relevantChanges = [
+        "wallWidth", "wallHeight", "panelType", "designStyle", 
+        "primaryColor", "secondaryColor", "customPattern", "featureArea",
+        "ledStripLength", "ledColor"
+      ];
+      if (name && relevantChanges.includes(name.split('.')[0])) {
+         calculateMaterials(values as z.infer<typeof formSchema>);
+      }
+    });
+    // Initial calculation
     calculateMaterials(getValues());
-  }, [wallWidth, wallHeight, panelType, designStyle, primaryColor, secondaryColor, customPattern, calculateMaterials, getValues]);
+    
+    return () => subscription.unsubscribe();
+  }, [watch, calculateMaterials, getValues]);
 
 
   return (
@@ -284,22 +298,22 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                     <RadioGroup
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      className="flex flex-col space-y-1"
+                      className="flex space-x-4"
                     >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem className="flex items-center space-x-2 space-y-0">
                         <FormControl>
                           <RadioGroupItem value="6-inch" />
                         </FormControl>
                         <FormLabel className="font-normal">
-                          6-inch width
+                          6-inch
                         </FormLabel>
                       </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                      <FormItem className="flex items-center space-x-2 space-y-0">
                         <FormControl>
                           <RadioGroupItem value="1-ft" />
                         </FormControl>
                         <FormLabel className="font-normal">
-                          1-ft width
+                          1-ft
                         </FormLabel>
                       </FormItem>
                     </RadioGroup>
@@ -461,43 +475,42 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
             </AccordionItem>
 
              <AccordionItem value="item-3">
-              <AccordionTrigger>LED Lighting</AccordionTrigger>
-              <AccordionContent className="space-y-4 pt-4">
-                 <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="ledStripLength" render={({ field }) => (<FormItem><FormLabel>LED Strip (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={handlePriceChange}/></FormControl></FormItem>)} />
-                  <FormField control={control} name="ledStripPricePerMeter" render={({ field }) => (<FormItem><FormLabel>Price/Meter</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange}/></FormControl></FormItem>)} />
+              <AccordionTrigger>Feature Area & Lighting</AccordionTrigger>
+              <AccordionContent className="space-y-6 pt-4">
+                <div className="space-y-2">
+                  <FormLabel>Feature Area</FormLabel>
+                  <div className="grid grid-cols-2 gap-4 p-2 border rounded-md">
+                     <FormField control={control} name="featureArea.width" render={({ field }) => (<FormItem><FormLabel>Width (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
+                     <FormField control={control} name="featureArea.height" render={({ field }) => (<FormItem><FormLabel>Height (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
+                     <FormField control={control} name="featureArea.color" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Color</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="white-gold">White & Gold</SelectItem><SelectItem value="white-blue">White & Blue</SelectItem><SelectItem value="black">Solid Black</SelectItem><SelectItem value="texture">Texture</SelectItem></SelectContent></Select></FormItem>)} />
+                      <FormField control={control} name="featureArea.cost" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Material Cost</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
+                     <FormField
+                        control={control}
+                        name="featureArea.blur"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between rounded-lg col-span-2">
+                            <FormLabel>Blur Background</FormLabel>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                  </div>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
-            
-            <AccordionItem value="item-4">
-              <AccordionTrigger>Wall Stickers</AccordionTrigger>
-              <AccordionContent className="space-y-4 pt-4">
-                 <div className="grid grid-cols-2 gap-4">
-                    <FormField control={control} name="sticker.quantity" render={({ field }) => (<FormItem><FormLabel>Sticker Quantity</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={handlePriceChange} /></FormControl></FormItem>)} />
-                    <FormField control={control} name="sticker.price" render={({ field }) => (<FormItem><FormLabel>Price/Sticker</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
-                 </div>
-                 <FormField
-                    control={control}
-                    name="sticker.orientation"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Sticker Orientation</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="vertical">Vertical</SelectItem>
-                            <SelectItem value="horizontal">Horizontal</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
+                 <div className="space-y-2">
+                   <FormLabel>LED Lighting</FormLabel>
+                   <div className="grid grid-cols-2 gap-4 p-2 border rounded-md">
+                    <FormField control={control} name="ledStripLength" render={({ field }) => (<FormItem><FormLabel>LED Strip (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
+                    <FormField control={control} name="ledStripPricePerMeter" render={({ field }) => (<FormItem><FormLabel>Price/Meter</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
+                    {ledStripLength > 0 && (
+                       <FormField control={control} name="ledColor" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>LED Color</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="warm-white">Warm White</SelectItem><SelectItem value="cool-white">Cool White</SelectItem></SelectContent></Select></FormItem>)} />
                     )}
-                  />
+                   </div>
+                 </div>
               </AccordionContent>
             </AccordionItem>
 
