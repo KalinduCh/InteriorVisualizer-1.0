@@ -485,39 +485,39 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
              <AccordionItem value="item-3">
               <AccordionTrigger>Feature Area & Lighting</AccordionTrigger>
               <AccordionContent className="space-y-6 pt-4">
-                <div className="space-y-2">
-                  <FormLabel>Feature Area</FormLabel>
-                  <div className="grid grid-cols-2 gap-4 p-2 border rounded-md">
+                <div className="space-y-4 p-2 border rounded-md">
+                   <FormLabel>Feature Area</FormLabel>
+                  <div className="grid grid-cols-2 gap-4">
                      <FormField control={control} name="featureArea.width" render={({ field }) => (<FormItem><FormLabel>Width (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={() => calculateMaterials(getValues())} /></FormControl></FormItem>)} />
                      <FormField control={control} name="featureArea.height" render={({ field }) => (<FormItem><FormLabel>Height (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={() => calculateMaterials(getValues())} /></FormControl></FormItem>)} />
-                     <FormField control={control} name="featureArea.color" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Texture</FormLabel><Select onValueChange={(value) => { field.onChange(value); calculateMaterials(getValues()); }} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="black-gold">Black Gold Marble</SelectItem><SelectItem value="white-gold">White Gold Marble</SelectItem><SelectItem value="white-blue-gold">White Blue Gold</SelectItem><SelectItem value="white-dark-gold">White Dark Gold</SelectItem></SelectContent></Select></FormItem>)} />
-                      <FormField control={control} name="featureArea.cost" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Material Cost</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
-                     <FormField
-                        control={control}
-                        name="featureArea.blur"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-center justify-between rounded-lg col-span-2">
-                            <FormLabel>Blur Background</FormLabel>
-                            <FormControl>
-                              <Switch
-                                checked={field.value}
-                                onCheckedChange={(checked) => { field.onChange(checked); calculateMaterials(getValues()); }}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
                   </div>
+                   <FormField control={control} name="featureArea.color" render={({ field }) => (<FormItem><FormLabel>Texture</FormLabel><Select onValueChange={(value) => { field.onChange(value); calculateMaterials(getValues()); }} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="black-gold">Black Gold Marble</SelectItem><SelectItem value="white-gold">White Gold Marble</SelectItem><SelectItem value="white-blue-gold">White Blue Gold</SelectItem><SelectItem value="white-dark-gold">White Dark Gold</SelectItem></SelectContent></Select></FormItem>)} />
+                   <FormField control={control} name="featureArea.cost" render={({ field }) => (<FormItem><FormLabel>Material Cost</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
+                   <FormField
+                      control={control}
+                      name="featureArea.blur"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg pt-2">
+                          <FormLabel>Blur Background</FormLabel>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={(checked) => { field.onChange(checked); calculateMaterials(getValues()); }}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
                 </div>
-                 <div className="space-y-2">
+                 <div className="space-y-4 p-2 border rounded-md">
                    <FormLabel>LED Lighting</FormLabel>
-                   <div className="grid grid-cols-2 gap-4 p-2 border rounded-md">
-                    <FormField control={control} name="ledStripLength" render={({ field }) => (<FormItem><FormLabel>LED Strip (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={() => calculateMaterials(getValues())} /></FormControl></FormItem>)} />
-                    <FormField control={control} name="ledStripPricePerMeter" render={({ field }) => (<FormItem><FormLabel>Price/Meter</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
-                    {ledStripLength > 0 && (
-                       <FormField control={control} name="ledColor" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>LED Color</FormLabel><Select onValueChange={(value) => { field.onChange(value); calculateMaterials(getValues()); }} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="warm-white">Warm White</SelectItem><SelectItem value="cool-white">Cool White</SelectItem></SelectContent></Select></FormItem>)} />
-                    )}
+                   <div className="grid grid-cols-2 gap-4">
+                      <FormField control={control} name="ledStripLength" render={({ field }) => (<FormItem><FormLabel>LED Strip (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={() => calculateMaterials(getValues())} /></FormControl></FormItem>)} />
+                      <FormField control={control} name="ledStripPricePerMeter" render={({ field }) => (<FormItem><FormLabel>Price/Meter</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
                    </div>
+                    {ledStripLength > 0 && (
+                       <FormField control={control} name="ledColor" render={({ field }) => (<FormItem><FormLabel>LED Color</FormLabel><Select onValueChange={(value) => { field.onChange(value); calculateMaterials(getValues()); }} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="warm-white">Warm White</SelectItem><SelectItem value="cool-white">Cool White</SelectItem></SelectContent></Select></FormItem>)} />
+                    )}
                  </div>
               </AccordionContent>
              </AccordionItem>
