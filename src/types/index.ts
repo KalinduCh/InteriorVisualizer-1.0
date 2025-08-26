@@ -36,10 +36,15 @@ export type Panel = {
   color: PanelColor;
 };
 
-export type OtherItem = {
-  name: string;
-  price: number;
-  quantity: number;
+export type Sticker = {
+  quantity?: number;
+  price?: number;
+  orientation?: 'vertical' | 'horizontal';
+};
+
+export type CustomPatternSegment = {
+  color: PanelColor;
+  panels: number;
 };
 
 export interface WallDesignerCalculationResults {
@@ -54,9 +59,7 @@ export interface WallDesignerCalculationResults {
   rollPlugs: number;
 
   ledStripMeters: number;
-
-  otherItems: OtherItem[];
-  otherItemsTotalCost?: number;
+  sticker: Sticker;
   
   totalCost?: number;
 
@@ -64,4 +67,5 @@ export interface WallDesignerCalculationResults {
   panelsCost?: number;
   clipsCost?: number;
   ledStripCost?: number;
+  stickerCost?: number;
 }

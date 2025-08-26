@@ -28,12 +28,9 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
     );
   }
 
-  const { wallWidth, wallHeight, panels } = results;
+  const { wallWidth, wallHeight, panels, sticker } = results;
 
-  // Calculate the aspect ratio
   const aspectRatio = wallWidth / wallHeight;
-  
-  // Calculate the dimensions of the visualizer
   const visualizerWidth = VISUALIZER_MAX_WIDTH;
   const visualizerHeight = visualizerWidth / aspectRatio;
 
@@ -55,12 +52,13 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
   }
   
   const panelWidthPercentage = (1 / panels.length) * 100;
+  const hasStickers = sticker && sticker.quantity && sticker.quantity > 0;
 
   return (
     <div className="mb-8">
       <h3 className="text-lg font-semibold text-center mb-2">2D Visualizer</h3>
       <Card className="relative overflow-hidden" style={{ width: `${visualizerWidth}px`, height: `${visualizerHeight}px`, maxWidth: '100%' }}>
-        <CardContent className="p-0 h-full w-full bg-muted/30 flex flex-row">
+        <CardContent className="p-0 h-full w-full bg-muted/30 flex flex-row relative">
             {panels.map((panel, index) => {
                  const panelStyle = {
                     width: `${panelWidthPercentage}%`,
@@ -73,6 +71,19 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
                     </div>
                  )
             })}
+            {hasStickers && Array.from({ length: sticker.quantity! }).map((_, i) => (
+                <div 
+                    key={`sticker-${i}`} 
+                    className={cn(
+                        "absolute bg-slate-500/30 backdrop-blur-sm border-2 border-slate-400/50 rounded-lg",
+                        sticker.orientation === 'vertical' ? 'w-10 h-32' : 'w-32 h-10'
+                    )}
+                    style={{
+                        top: `${20 + i * 10}%`,
+                        left: `${20 + i * 15}%`,
+                    }}
+                ></div>
+            ))}
         </CardContent>
       </Card>
       <div className="flex justify-between text-sm text-muted-foreground mt-1">

@@ -1,7 +1,7 @@
 
-import type { WallDesignerCalculationResults, OtherItem } from "@/types";
+import type { WallDesignerCalculationResults } from "@/types";
 import ResultCard from "./result-card";
-import { CircleDollarSign, Cog, LayoutPanelLeft, Lightbulb, Package, Pin, Wrench } from "lucide-react";
+import { CircleDollarSign, Cog, LayoutPanelLeft, Lightbulb, Package, Pin, StickyNote, Wrench } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -14,7 +14,7 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
     );
   }
   
-  const hasOtherItems = results.otherItems && results.otherItems.length > 0;
+  const hasStickers = results.sticker && results.sticker.quantity && results.sticker.quantity > 0;
   const hasLed = results.ledStripMeters > 0;
 
   const materials = [
@@ -27,6 +27,10 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
   if (hasLed) {
     materials.push({ name: "LED Strip", quantity: results.ledStripMeters, unit: "meters", description: "Lighting strips", icon: <Lightbulb className="w-8 h-8 text-primary" />, cost: results.ledStripCost });
   }
+  if (hasStickers) {
+    materials.push({ name: "Wall Stickers", quantity: results.sticker.quantity!, unit: "stickers", description: `${results.sticker.orientation}`, icon: <StickyNote className="w-8 h-8 text-primary" />, cost: results.stickerCost });
+  }
+
 
   return (
     <div className="mt-8">
@@ -37,34 +41,6 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
         ))}
       </div>
       
-      {hasOtherItems && (
-         <>
-          <h2 className="text-2xl font-bold my-8 text-center md:text-left">Other Items</h2>
-           <Card>
-            <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead className="text-center">Quantity</TableHead>
-                    <TableHead className="text-right">Unit Price</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {results.otherItems.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{item.name}</TableCell>
-                      <TableCell className="text-center">{item.quantity}</TableCell>
-                      <TableCell className="text-right">LKR {item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                      <TableCell className="text-right">LKR {(item.quantity * item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-           </Card>
-        </>
-      )}
-
       {results.totalCost !== undefined && results.totalCost > 0 && (
         <Card className="mt-8 shadow-lg">
           <CardHeader>

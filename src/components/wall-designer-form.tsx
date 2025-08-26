@@ -21,17 +21,23 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { WallDesignerCalculationResults, Panel, OtherItem } from "@/types";
+import type { WallDesignerCalculationResults, Panel, Sticker, CustomPatternSegment } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { cn } from "@/lib/utils";
 
 const panelSchema = z.object({
   color: z.enum(['white-gold', 'teak', 'black-gold']).default('white-gold'),
 });
 
-const otherItemSchema = z.object({
-  name: z.string().min(1, "Item name is required."),
-  quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
-  price: z.coerce.number().min(0, "Price cannot be negative."),
+const stickerSchema = z.object({
+  quantity: z.coerce.number().min(0).optional(),
+  price: z.coerce.number().min(0).optional(),
+  orientation: z.enum(['vertical', 'horizontal']).default('vertical'),
+});
+
+const customPatternSegmentSchema = z.object({
+  color: z.enum(['white-gold', 'teak', 'black-gold']).default('white-gold'),
+  panels: z.coerce.number().min(1),
 });
 
 const formSchema = z.object({
@@ -41,6 +47,15 @@ const formSchema = z.object({
   panelType: z.enum(['6-inch', '1-ft'], { required_error: "You need to select a panel type."}),
   panelPrice: z.coerce.number().min(0).optional(),
   
+  designStyle: z.enum(['alternating', 'center-stage', 'gradient-flow', 'custom']).default('alternating'),
+  
+  // For presets
+  primaryColor: z.enum(['white-gold', 'teak', 'black-gold']).default('black-gold'),
+  secondaryColor: z.enum(['white-gold', 'teak', 'black-gold']).default('white-gold'),
+  
+  // For custom pattern
+  customPattern: z.array(customPatternSegmentSchema),
+
   panels: z.array(panelSchema),
 
   clipsPerPanel: z.coerce.number().min(3).max(5).default(3),
@@ -49,13 +64,70 @@ const formSchema = z.object({
   ledStripLength: z.coerce.number().min(0).optional(), // in feet
   ledStripPricePerMeter: z.coerce.number().min(0).optional(),
 
-  otherItems: z.array(otherItemSchema).optional(),
+  sticker: stickerSchema,
 });
 
 type WallDesignerFormProps = {
   onCalculate: (results: WallDesignerCalculationResults | null) => void;
   onReset: () => void;
 };
+
+function generatePanelsFromStyle(values: z.infer<typeof formSchema>, panelsNeeded: number): Panel[] {
+    const { designStyle, primaryColor, secondaryColor, customPattern } = values;
+
+    if (panelsNeeded <= 0) return [];
+
+    switch (designStyle) {
+        case 'alternating':
+            return Array.from({ length: panelsNeeded }, (_, i) => ({
+                color: i % 2 === 0 ? primaryColor : secondaryColor,
+            }));
+        case 'center-stage': {
+            const centerSize = Math.max(1, Math.floor(panelsNeeded / 3));
+            const sideSize = Math.floor((panelsNeeded - centerSize) / 2);
+            const panels: Panel[] = [];
+            for (let i = 0; i < sideSize; i++) panels.push({ color: primaryColor });
+            for (let i = 0; i < centerSize; i++) panels.push({ color: secondaryColor });
+            // The rest of the panels
+            const remaining = panelsNeeded - panels.length;
+            for (let i = 0; i < remaining; i++) panels.push({ color: primaryColor });
+            return panels;
+        }
+        case 'gradient-flow': {
+             const panels: Panel[] = [];
+             for (let i = 0; i < panelsNeeded; i++) {
+                const ratio = i / (panelsNeeded - 1);
+                if (ratio < 0.5) {
+                    panels.push({ color: primaryColor });
+                } else {
+                    panels.push({ color: secondaryColor });
+                }
+            }
+            return panels;
+        }
+        case 'custom': {
+            const panels: Panel[] = [];
+            if (!customPattern || customPattern.length === 0) {
+                 return Array.from({ length: panelsNeeded }, () => ({ color: 'white-gold' }));
+            }
+            for (const segment of customPattern) {
+                for (let i = 0; i < segment.panels; i++) {
+                    if (panels.length < panelsNeeded) {
+                        panels.push({ color: segment.color });
+                    }
+                }
+            }
+            // Fill remaining panels if custom pattern is not enough
+            while(panels.length < panelsNeeded) {
+                panels.push({ color: 'white-gold' });
+            }
+            return panels.slice(0, panelsNeeded);
+        }
+        default:
+            return Array.from({ length: panelsNeeded }, () => ({ color: 'white-gold' }));
+    }
+}
+
 
 export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
@@ -69,20 +141,19 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
       clipPrice: 0,
       ledStripLength: 0,
       ledStripPricePerMeter: 0,
-      otherItems: [],
+      sticker: { quantity: 0, price: 0, orientation: 'vertical' },
+      designStyle: 'alternating',
+      primaryColor: 'black-gold',
+      secondaryColor: 'white-gold',
+      customPattern: [{ color: 'black-gold', panels: 3 }, { color: 'white-gold', panels: 2 }],
     },
   });
 
   const { control, reset, watch, getValues, handleSubmit, setValue } = form;
   
-  const { fields: panelFields, replace: replacePanels } = useFieldArray({
+  const { fields: customPatternFields, append: appendCustomPattern, remove: removeCustomPattern } = useFieldArray({
     control,
-    name: "panels"
-  });
-
-  const { fields: otherItemFields, append: appendOtherItem, remove: removeOtherItem } = useFieldArray({
-    control,
-    name: "otherItems"
+    name: "customPattern"
   });
 
   const calculateMaterials = useCallback((values: z.infer<typeof formSchema>) => {
@@ -95,7 +166,11 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     
     const panelWidthInFeet = panelType === '1-ft' ? 1 : 0.5;
     const panelsNeeded = Math.ceil(wallWidth / panelWidthInFeet);
+    const generatedPanels = generatePanelsFromStyle(values, panelsNeeded);
     
+    // This is a "controlled" way to update the field array
+    setValue('panels', generatedPanels, { shouldValidate: false, shouldDirty: false });
+
     const clipsPerPanel = values.clipsPerPanel || 3;
     const clips = panelsNeeded * clipsPerPanel;
     const screws = clips; // 1 screw per clip
@@ -103,55 +178,35 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     
     const ledStripFeet = values.ledStripLength || 0;
     const ledStripMeters = parseFloat((ledStripFeet / 3.281).toFixed(2));
+    
+    const stickerCost = (values.sticker.quantity || 0) * (values.sticker.price || 0);
 
     const panelsCost = panelsNeeded * (values.panelPrice || 0);
     const clipsCost = clips * (values.clipPrice || 0);
     const ledStripCost = ledStripMeters * (values.ledStripPricePerMeter || 0);
     
-    const otherItems = values.otherItems || [];
-    const otherItemsTotalCost = otherItems.reduce((total, item) => total + (item.quantity * item.price), 0);
-
-    const totalCost = panelsCost + clipsCost + ledStripCost + otherItemsTotalCost;
+    const totalCost = panelsCost + clipsCost + ledStripCost + stickerCost;
     
     const results: WallDesignerCalculationResults = {
       wallWidth,
       wallHeight,
       panelType,
-      panels: values.panels,
+      panels: generatedPanels,
       panelsNeeded,
       clips,
       screws,
       rollPlugs,
       ledStripMeters,
-      otherItems,
-      otherItemsTotalCost,
+      sticker: values.sticker,
       totalCost,
       panelsCost,
       clipsCost,
       ledStripCost,
+      stickerCost,
     };
     onCalculate(results);
-  }, [onCalculate]);
+  }, [onCalculate, setValue]);
   
-  const wallWidth = watch('wallWidth');
-  const wallHeight = watch('wallHeight');
-  const panelType = watch('panelType');
-
-  useEffect(() => {
-    if (wallWidth && wallHeight && panelType) {
-      const panelWidthInFeet = panelType === '1-ft' ? 1 : 0.5;
-      const panelsNeeded = Math.ceil(wallWidth / panelWidthInFeet);
-      const currentPanels = getValues('panels');
-      
-      if (panelsNeeded !== currentPanels.length) {
-          const newPanels = Array.from({ length: panelsNeeded }, (_, i) => {
-              return currentPanels[i] || { color: 'white-gold' };
-          });
-          replacePanels(newPanels);
-      }
-    }
-  }, [wallWidth, wallHeight, panelType, getValues, replacePanels]);
-
 
   useEffect(() => {
     const subscription = watch((values) => {
@@ -167,21 +222,11 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
   }
   
   const handleResetClick = () => {
-    reset({
-      wallWidth: undefined,
-      wallHeight: undefined,
-      panelType: undefined,
-      panelPrice: 0,
-      panels: [],
-      clipsPerPanel: 3,
-      clipPrice: 0,
-      ledStripLength: 0,
-      ledStripPricePerMeter: 0,
-      otherItems: [],
-    });
-    replacePanels([]);
+    reset();
     onReset();
   }
+  
+  const designStyle = watch('designStyle');
 
   return (
     <Card className="shadow-lg">
@@ -259,34 +304,116 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
               <AccordionTrigger>Panel Configuration</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
                  <FormField control={control} name="panelPrice" render={({ field }) => (<FormItem><FormLabel>Price per Panel</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
-                  {panelFields.length > 0 && <FormLabel>Panel Colors</FormLabel>}
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                  {panelFields.map((field, index) => (
-                    <FormField
-                      key={field.id}
+                 <FormField
+                    control={control}
+                    name="designStyle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Design Style</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a design style" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="alternating">Alternating</SelectItem>
+                            <SelectItem value="center-stage">Center Stage</SelectItem>
+                            <SelectItem value="gradient-flow">Gradient Flow</SelectItem>
+                            <SelectItem value="custom">Custom Pattern</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                <div className={cn("space-y-4", designStyle === 'custom' ? "hidden" : "")}>
+                   <FormField
                       control={control}
-                      name={`panels.${index}.color`}
+                      name="primaryColor"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="font-normal text-xs">Panel {index + 1}</FormLabel>
+                          <FormLabel>Primary Color</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a color" />
-                              </SelectTrigger>
-                            </FormControl>
+                            <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
                               <SelectItem value="white-gold">White with Gold</SelectItem>
                               <SelectItem value="teak">Teak</SelectItem>
                               <SelectItem value="black-gold">Black with Gold</SelectItem>
                             </SelectContent>
                           </Select>
-                          <FormMessage />
                         </FormItem>
                       )}
                     />
-                  ))}
-                  </div>
+                    <FormField
+                      control={control}
+                      name="secondaryColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Secondary Color</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                            <SelectContent>
+                              <SelectItem value="white-gold">White with Gold</SelectItem>
+                              <SelectItem value="teak">Teak</SelectItem>
+                              <SelectItem value="black-gold">Black with Gold</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                </div>
+                
+                <div className={cn("space-y-4", designStyle !== 'custom' ? "hidden" : "")}>
+                   <FormLabel>Custom Pattern Segments</FormLabel>
+                    {customPatternFields.map((field, index) => (
+                      <div key={field.id} className="flex items-end gap-2 p-2 border rounded-md">
+                        <FormField
+                            control={control}
+                            name={`customPattern.${index}.color`}
+                            render={({ field }) => (
+                                <FormItem className="flex-grow">
+                                    <FormLabel className="text-xs">Color</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="white-gold">White & Gold</SelectItem>
+                                            <SelectItem value="teak">Teak</SelectItem>
+                                            <SelectItem value="black-gold">Black & Gold</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={control}
+                            name={`customPattern.${index}.panels`}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-xs">No. of Panels</FormLabel>
+                                    <FormControl><Input type="number" {...field} className="w-24"/></FormControl>
+                                </FormItem>
+                            )}
+                        />
+                        <Button type="button" variant="ghost" size="icon" onClick={() => removeCustomPattern(index)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                     <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => appendCustomPattern({ color: 'white-gold', panels: 1 })}
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add Segment
+                    </Button>
+                </div>
+
+
               </AccordionContent>
             </AccordionItem>
             
@@ -328,73 +455,35 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                 </div>
               </AccordionContent>
             </AccordionItem>
-
+            
             <AccordionItem value="item-4">
-              <AccordionTrigger>Other Items</AccordionTrigger>
+              <AccordionTrigger>Wall Stickers</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
-                <div className="space-y-4">
-                  {otherItemFields.map((field, index) => (
-                    <div key={field.id} className="p-2 border rounded-md space-y-2">
-                       <FormField
-                        control={control}
-                        name={`otherItems.${index}.name`}
-                        render={({ field }) => (
-                           <FormItem>
-                            <FormLabel>Item Name</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="e.g. Wall Sticker" />
-                            </FormControl>
-                            <FormMessage />
-                           </FormItem>
-                        )}
-                      />
-                      <div className="flex gap-2">
-                         <FormField
-                          control={control}
-                          name={`otherItems.${index}.quantity`}
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel>Qty</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} placeholder="1" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={control}
-                          name={`otherItems.${index}.price`}
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel>Price/Item</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} step="0.01" placeholder="1500.00" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                         <FormItem>
-                            <FormLabel className="opacity-0">Remove</FormLabel>
-                             <Button type="button" variant="ghost" size="icon" onClick={() => removeOtherItem(index)} className="mt-2">
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                          </FormItem>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-4"
-                  onClick={() => appendOtherItem({ name: "", quantity: 1, price: 0 })}
-                >
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Item
-                </Button>
+                 <div className="grid grid-cols-2 gap-4">
+                    <FormField control={control} name="sticker.quantity" render={({ field }) => (<FormItem><FormLabel>Sticker Quantity</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
+                    <FormField control={control} name="sticker.price" render={({ field }) => (<FormItem><FormLabel>Price/Sticker</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                 </div>
+                 <FormField
+                    control={control}
+                    name="sticker.orientation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Sticker Orientation</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={String(field.value)}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="vertical">Vertical</SelectItem>
+                            <SelectItem value="horizontal">Horizontal</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
               </AccordionContent>
             </AccordionItem>
 
