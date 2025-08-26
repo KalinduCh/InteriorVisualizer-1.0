@@ -25,10 +25,8 @@ const panelVeinMap = {
 }
 
 const featureAreaColorMap = {
-    'white-gold': 'bg-stone-50 border-stone-300 bg-[linear-gradient(135deg,rgba(212,175,55,0.15)_0%,transparent_20%),linear-gradient(-45deg,rgba(200,200,200,0.3)_20%,transparent_100%)]',
-    'white-blue': 'bg-slate-50 border-sky-200 bg-[linear-gradient(135deg,rgba(14,165,233,0.1)_0%,transparent_20%),linear-gradient(-45deg,rgba(203,213,225,0.4)_20%,transparent_100%)]',
-    'black': 'bg-gray-900 border-gray-700 bg-[linear-gradient(135deg,rgba(212,175,55,0.2)_0%,transparent_30%),linear-gradient(-45deg,rgba(255,255,255,0.1)_20%,transparent_100%)]',
-    'texture': 'bg-gray-800 border-gray-600 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_0%,transparent_70%),linear-gradient(135deg,rgba(212,175,55,0.1)_0%,transparent_30%),linear-gradient(-45deg,rgba(255,255,255,0.05)_20%,transparent_100%)]',
+    'black-gold': "bg-gray-900 border-gray-600 bg-[linear-gradient(145deg,transparent_20%,rgba(0,0,0,0.8)_20.2%,rgba(0,0,0,0.8)_29.8%,transparent_30%),linear-gradient(35deg,transparent_30%,rgba(212,175,55,0.6)_30.2%,rgba(212,175,55,0.8)_35.1%,transparent_35.5%),linear-gradient(35deg,transparent_60%,rgba(212,175,55,0.6)_60.2%,rgba(212,175,55,0.8)_65.1%,transparent_65.5%),radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_0%,rgba(255,255,255,0)_80%)]",
+    'white-gold': "bg-gray-50 border-gray-300 bg-[linear-gradient(145deg,transparent_20%,rgba(100,100,100,0.8)_20.1%,rgba(10,10,10,0.9)_29.9%,transparent_30.1%),linear-gradient(35deg,transparent_30%,rgba(212,175,55,0.6)_30.2%,rgba(212,175,55,0.8)_35.1%,transparent_35.5%),linear-gradient(35deg,transparent_60%,rgba(212,175,55,0.6)_60.2%,rgba(212,175,55,0.8)_65.1%,transparent_65.5%),radial-gradient(circle_at_20%_80%,rgba(0,0,0,0.2)_0%,rgba(0,0,0,0)_50%)]"
 };
 
 

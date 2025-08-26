@@ -32,7 +32,7 @@ const panelSchema = z.object({
 const featureAreaSchema = z.object({
   width: z.coerce.number().min(0).default(0),
   height: z.coerce.number().min(0).default(0),
-  color: z.enum(['white-gold', 'white-blue', 'black', 'texture']).default('black'),
+  color: z.enum(['black-gold', 'white-gold']).default('black-gold'),
   blur: z.boolean().default(true),
   cost: z.coerce.number().min(0).default(0),
 });
@@ -151,7 +151,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
       ledStripLength: 0,
       ledStripPricePerMeter: 0,
       ledColor: 'warm-white',
-      featureArea: { width: 5, height: 3, color: 'black', blur: true, cost: 0 },
+      featureArea: { width: 5, height: 3, color: 'black-gold', blur: true, cost: 0 },
       designStyle: 'solid',
       primaryColor: 'teak',
       secondaryColor: 'white-gold',
@@ -178,7 +178,6 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     const panelsNeeded = Math.ceil(wallWidth / panelWidthInFeet);
     const generatedPanels = generatePanelsFromStyle(values, panelsNeeded);
     
-    // Update the panels array in the form state without re-triggering calculations
     values.panels = generatedPanels;
 
     const clipsPerPanel = values.clipsPerPanel || 3;
@@ -234,15 +233,14 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
   const designStyle = watch('designStyle');
   const ledStripLength = watch('ledStripLength');
 
-  // Trigger calculation when dimensions or style changes
   useEffect(() => {
     const subscription = watch((values, { name }) => {
       const relevantChanges = [
         "wallWidth", "wallHeight", "panelType", "designStyle", 
         "primaryColor", "secondaryColor", "customPattern", "featureArea",
-        "ledStripLength", "ledColor"
+        "ledStripLength", "ledColor", "clipsPerPanel"
       ];
-      if (name && relevantChanges.includes(name.split('.')[0])) {
+      if (name && relevantChanges.some(key => name.startsWith(key))) {
          calculateMaterials(values as z.infer<typeof formSchema>);
       }
     });
@@ -482,7 +480,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                   <div className="grid grid-cols-2 gap-4 p-2 border rounded-md">
                      <FormField control={control} name="featureArea.width" render={({ field }) => (<FormItem><FormLabel>Width (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
                      <FormField control={control} name="featureArea.height" render={({ field }) => (<FormItem><FormLabel>Height (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
-                     <FormField control={control} name="featureArea.color" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Color</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="white-gold">White & Gold</SelectItem><SelectItem value="white-blue">White & Blue</SelectItem><SelectItem value="black">Solid Black</SelectItem><SelectItem value="texture">Texture</SelectItem></SelectContent></Select></FormItem>)} />
+                     <FormField control={control} name="featureArea.color" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Texture</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="black-gold">Black Gold Marble</SelectItem><SelectItem value="white-gold">White Gold Marble</SelectItem></SelectContent></Select></FormItem>)} />
                       <FormField control={control} name="featureArea.cost" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Material Cost</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
                      <FormField
                         control={control}
