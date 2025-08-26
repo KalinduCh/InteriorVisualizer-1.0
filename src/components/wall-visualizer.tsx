@@ -26,10 +26,10 @@ const panelVeinMap = {
 
 
 const featureAreaColorMap = {
-    'white-gold': 'bg-gradient-to-br from-slate-50 to-slate-300 border-slate-300',
+    'white-gold': 'bg-gradient-to-br from-slate-50 to-slate-200 border-slate-300',
     'white-blue': 'bg-gradient-to-br from-sky-50 to-sky-200 border-sky-300',
     'black': 'bg-black border-gray-700',
-    'texture': 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-700 via-gray-900 to-black border-gray-600',
+    'texture': 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-600 via-gray-800 to-black border-gray-600',
 };
 
 const ledGlowMap = {
