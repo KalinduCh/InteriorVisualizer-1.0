@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Construction, LayoutPanelLeft, PanelsTopLeft } from 'lucide-react';
@@ -10,7 +11,7 @@ export default function Home() {
         <div className="container mx-auto flex items-center p-4">
           <Construction className="w-6 h-6 mr-2 text-primary" />
           <h1 className="text-xl font-bold font-headline text-foreground">
-            DesignPro
+            DesignPro - Sivilima Narammala
           </h1>
         </div>
       </header>
@@ -40,7 +41,7 @@ export default function Home() {
               </CardHeader>
               <CardContent className="flex-grow">
                 <div className="aspect-video relative rounded-md overflow-hidden">
-                  <Image src="https://picsum.photos/600/400" alt="Suspended Ceiling" fill className="object-cover" data-ai-hint="suspended ceiling" />
+                  <Image src="https://picsum.photos/600/400" alt="Suspended Ceiling" fill className="object-cover" data-ai-hint="2x2 ceiling" />
                 </div>
                 <p className="text-sm text-muted-foreground mt-4">
                   Estimate panels, tees, wires, and costs for your suspended ceiling. Perfect for renovations and new constructions.
@@ -64,7 +65,7 @@ export default function Home() {
               </CardHeader>
               <CardContent className="flex-grow">
                 <div className="aspect-video relative rounded-md overflow-hidden">
-                   <Image src="https://picsum.photos/600/400" alt="Modern Wall Design" fill className="object-cover" data-ai-hint="modern wall tv" />
+                   <Image src="https://picsum.photos/600/400" alt="Modern Wall Design" fill className="object-cover" data-ai-hint="wall panel interior" />
                 </div>
                 <p className="text-sm text-muted-foreground mt-4">
                   Design and visualize your feature wall with fluted panels, stickers, and LED strips. Calculate materials and costs in real-time.
@@ -77,7 +78,7 @@ export default function Home() {
       <footer className="py-6 md:px-8 md:py-0 border-t mt-12">
         <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
           <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
-            Built with precision. For illustrative purposes only. Always consult a professional.
+            &copy; {new Date().getFullYear()} Kalindu Athapaththu
           </p>
         </div>
       </footer>
