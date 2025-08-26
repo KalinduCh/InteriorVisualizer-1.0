@@ -1,4 +1,5 @@
 
+
 export interface CeilingCalculationResults {
   panels: number;
   crossTees: number;
@@ -43,6 +44,11 @@ export type FeatureArea = {
   cost?: number;
 };
 
+export type TV = {
+    enabled: boolean;
+    size?: number;
+};
+
 export type CustomPatternSegment = {
   color: PanelColor;
   panels: number;
@@ -65,6 +71,7 @@ export interface WallDesignerCalculationResults {
   ledColor?: 'warm-white' | 'cool-white';
   
   featureArea: FeatureArea;
+  tv?: TV;
   
   laborCost?: number;
   totalCost?: number;

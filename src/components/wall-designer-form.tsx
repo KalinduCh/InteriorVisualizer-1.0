@@ -37,6 +37,11 @@ const featureAreaSchema = z.object({
   cost: z.coerce.number().min(0).default(0),
 });
 
+const tvSchema = z.object({
+    enabled: z.boolean().default(false),
+    size: z.coerce.number().optional(),
+});
+
 const customPatternSegmentSchema = z.object({
   color: z.enum(['white-gold', 'teak', 'black-gold', 'light-brown']).default('white-gold'),
   panels: z.coerce.number().min(1),
@@ -71,6 +76,7 @@ const formSchema = z.object({
   ledStripPricePerMeter: z.coerce.number().min(0).default(0),
   ledColor: z.enum(['warm-white', 'cool-white']).default('warm-white'),
   useLed: z.boolean().default(false),
+  tv: tvSchema,
 
   laborCost: z.coerce.number().min(0).default(0),
   featureArea: featureAreaSchema,
@@ -162,6 +168,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
       useLed: false,
       laborCost: 0,
       featureArea: { width: 5, height: 3, color: 'black-gold', blur: true, cost: 0 },
+      tv: { enabled: true, size: 55 },
       designStyle: 'solid',
       primaryColor: 'teak',
       secondaryColor: 'white-gold',
@@ -240,6 +247,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
       ledStripMeters,
       ledColor: values.ledColor,
       featureArea: values.featureArea,
+      tv: values.tv,
       laborCost: laborCost,
       totalCost,
       panelsCost,
@@ -269,6 +277,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
   
   const designStyle = watch('designStyle');
   const useLed = watch('useLed');
+  const useTv = watch('tv.enabled');
 
   useEffect(() => {
     // Initial calculation on component mount
@@ -514,7 +523,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
             </AccordionItem>
 
              <AccordionItem value="item-3">
-              <AccordionTrigger>Feature Area & Lighting</AccordionTrigger>
+              <AccordionTrigger>Feature Area, TV & Lighting</AccordionTrigger>
               <AccordionContent className="space-y-6 pt-4">
                 <div className="space-y-4 p-2 border rounded-md">
                    <FormLabel>Feature Area</FormLabel>
@@ -540,6 +549,52 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                       )}
                     />
                 </div>
+                <div className="space-y-4 p-2 border rounded-md">
+                   <div className="flex items-center justify-between">
+                     <FormLabel>TV Preview</FormLabel>
+                     <FormField
+                        control={control}
+                        name="tv.enabled"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={(checked) => { field.onChange(checked); calculateMaterials(getValues()); }}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                   </div>
+                   { useTv && (
+                    <FormField
+                      control={control}
+                      name="tv.size"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>TV Size (Diagonal)</FormLabel>
+                          <Select onValueChange={(value) => { field.onChange(+value); calculateMaterials(getValues()); }} defaultValue={String(field.value)}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a TV size" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="32">32 inches</SelectItem>
+                              <SelectItem value="42">42 inches</SelectItem>
+                              <SelectItem value="50">50 inches</SelectItem>
+                              <SelectItem value="55">55 inches</SelectItem>
+                              <SelectItem value="65">65 inches</SelectItem>
+                              <SelectItem value="75">75 inches</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                   )}
+                 </div>
                  <div className="space-y-4 p-2 border rounded-md">
                    <div className="flex items-center justify-between">
                      <FormLabel>LED Lighting</FormLabel>

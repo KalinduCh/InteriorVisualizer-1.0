@@ -41,6 +41,16 @@ const ledGlowMap = {
     'cool-white': 'shadow-[0_0_25px_8px_rgba(200,220,255,0.7)]',
 }
 
+// Aspect ratio of 16:9
+const getTvDimensionsInFeet = (diagonalInches: number) => {
+    const heightInches = diagonalInches * 0.49;
+    const widthInches = diagonalInches * 0.87;
+    return {
+        widthFt: widthInches / 12,
+        heightFt: heightInches / 12,
+    };
+};
+
 export default function WallVisualizer({ results }: WallVisualizerProps) {
   if (!results || !results.wallWidth || !results.wallHeight || !results.panels || results.panels.length === 0) {
     return (
@@ -50,7 +60,7 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
     );
   }
 
-  const { wallWidth, wallHeight, panels, featureArea, ledStripMeters, ledColor } = results;
+  const { wallWidth, wallHeight, panels, featureArea, ledStripMeters, ledColor, tv } = results;
 
   const aspectRatio = wallWidth / wallHeight;
   const visualizerWidth = VISUALIZER_MAX_WIDTH;
@@ -82,6 +92,16 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
 
   const featureAreaWidth = hasFeatureArea ? (featureArea.width! / wallWidth) * 100 : 0;
   const featureAreaHeight = hasFeatureArea ? (featureArea.height! / wallHeight) * 100 : 0;
+
+  const showTv = tv?.enabled && tv.size && hasFeatureArea;
+  let tvDimensions = { widthPercent: 0, heightPercent: 0 };
+  if (showTv) {
+      const { widthFt, heightFt } = getTvDimensionsInFeet(tv.size!);
+      tvDimensions = {
+          widthPercent: (widthFt / featureArea.width!) * 100,
+          heightPercent: (heightFt / featureArea.height!) * 100,
+      };
+  }
 
 
   return (
@@ -122,8 +142,20 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
                         featureArea.blur && 'backdrop-blur-sm bg-opacity-50',
                         hasLed && ledColor && ledGlowMap[ledColor]
                     )}>
-                        <div className="w-full h-full flex items-center justify-center">
-                             <Tv2 className="w-1/2 h-1/2 text-gray-400/50" />
+                        <div className="w-full h-full flex items-center justify-center relative">
+                             {showTv ? (
+                                 <div 
+                                     className="bg-black rounded-sm border-2 border-gray-700 flex items-center justify-center"
+                                     style={{
+                                         width: `${tvDimensions.widthPercent}%`,
+                                         height: `${tvDimensions.heightPercent}%`,
+                                     }}
+                                 >
+                                    <span className="text-white/50 text-xs">{tv.size}" TV</span>
+                                 </div>
+                             ) : (
+                                <Tv2 className="w-1/2 h-1/2 text-gray-400/50" />
+                             )}
                         </div>
                     </div>
                   </div>
