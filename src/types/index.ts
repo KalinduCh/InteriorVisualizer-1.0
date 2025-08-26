@@ -1,3 +1,4 @@
+
 export interface CeilingCalculationResults {
   panels: number;
   crossTees: number;
@@ -29,6 +30,8 @@ export interface CeilingCalculationResults {
 }
 
 export interface WallDesignerCalculationResults {
+  wallWidth: number;
+  wallHeight: number;
   panels6Inch: number;
   panels1ft: number;
   clips: number;

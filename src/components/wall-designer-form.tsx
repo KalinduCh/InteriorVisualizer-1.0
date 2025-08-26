@@ -96,6 +96,8 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     const totalCost = panels6InchCost + panels1ftCost + clipsCost + stickersCost + ledStripCost;
     
     const results: WallDesignerCalculationResults = {
+      wallWidth,
+      wallHeight,
       panels6Inch,
       panels1ft,
       clips,

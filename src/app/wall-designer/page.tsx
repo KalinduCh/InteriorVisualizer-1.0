@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -6,6 +7,7 @@ import Link from 'next/link';
 import WallDesignerForm from '@/components/wall-designer-form';
 import WallDesignerResults from '@/components/wall-designer-results';
 import { WallDesignerCalculationResults } from '@/types';
+import WallVisualizer from '@/components/wall-visualizer';
 
 export default function WallDesignerPage() {
   const [results, setResults] = useState<WallDesignerCalculationResults | null>(null);
@@ -45,10 +47,7 @@ export default function WallDesignerPage() {
             <WallDesignerForm onCalculate={handleCalculate} onReset={handleReset} />
           </div>
           <div className="lg:col-span-2">
-            {/* Visualizer will go here */}
-            <div className="flex items-center justify-center h-full min-h-[400px] bg-card rounded-lg border border-dashed mb-8">
-              <p className="text-muted-foreground text-center p-4">2D Visualizer Coming Soon!</p>
-            </div>
+            <WallVisualizer results={results} />
             <WallDesignerResults results={results} />
           </div>
         </div>
