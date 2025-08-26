@@ -35,6 +35,7 @@ const featureAreaSchema = z.object({
   color: z.enum(['black-gold', 'white-gold', 'white-blue-gold', 'white-dark-gold']).default('black-gold'),
   blur: z.boolean().default(true),
   cost: z.coerce.number().min(0).default(0),
+  subtract: z.boolean().default(false),
 });
 
 const tvSchema = z.object({
@@ -167,7 +168,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
       ledColor: 'warm-white',
       useLed: false,
       laborCost: 0,
-      featureArea: { width: 5, height: 3, color: 'black-gold', blur: true, cost: 0 },
+      featureArea: { width: 5, height: 3, color: 'black-gold', blur: true, cost: 0, subtract: false },
       tv: { enabled: true, size: 55 },
       designStyle: 'solid',
       primaryColor: 'teak',
@@ -194,8 +195,14 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     const PANEL_HEIGHT = 9.5;
     const panelWidthInFeet = panelType === '1-ft' ? 1 : 0.5;
     
-    const panelsNeededHorizontally = Math.ceil(wallWidth / panelWidthInFeet);
+    let panelsNeededHorizontally = Math.ceil(wallWidth / panelWidthInFeet);
     
+    // Subtract panels for feature area if requested
+    if (featureArea && featureArea.subtract && (featureArea.width ?? 0) > 0 && (featureArea.height ?? 0) >= wallHeight) {
+        const panelsToSubtract = Math.floor(featureArea.width! / panelWidthInFeet);
+        panelsNeededHorizontally -= panelsToSubtract;
+    }
+
     const fullHeightRows = Math.floor(wallHeight / PANEL_HEIGHT);
     const remainingHeight = wallHeight % PANEL_HEIGHT;
 
@@ -207,7 +214,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
         totalPanelsNeeded += additionalPanelsForRemainder;
     }
 
-    const generatedPanels = generatePanelsFromStyle(values, panelsNeededHorizontally);
+    const generatedPanels = generatePanelsFromStyle(values, Math.ceil(wallWidth / panelWidthInFeet));
     
     setValue('panels', generatedPanels, { shouldValidate: false, shouldDirty: false });
 
@@ -539,6 +546,24 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg pt-2">
                           <FormLabel>Blur Background</FormLabel>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={(checked) => { field.onChange(checked); calculateMaterials(getValues()); }}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={control}
+                      name="featureArea.subtract"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg">
+                          <div>
+                            <FormLabel>Subtract Area</FormLabel>
+                            <p className="text-xs text-muted-foreground">Save panels by not covering the wall behind this area.</p>
+                          </div>
                           <FormControl>
                             <Switch
                               checked={field.value}

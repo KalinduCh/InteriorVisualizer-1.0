@@ -42,6 +42,7 @@ export type FeatureArea = {
   color?: 'black-gold' | 'white-gold' | 'white-blue-gold' | 'white-dark-gold';
   blur?: boolean;
   cost?: number;
+  subtract?: boolean;
 };
 
 export type TV = {
