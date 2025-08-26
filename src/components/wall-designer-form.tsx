@@ -194,28 +194,31 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     
     const PANEL_HEIGHT = 9.5;
     const panelWidthInFeet = panelType === '1-ft' ? 1 : 0.5;
-    
-    let panelsNeededHorizontally = Math.ceil(wallWidth / panelWidthInFeet);
-    
-    // Subtract panels for feature area if requested
-    if (featureArea && featureArea.subtract && (featureArea.width ?? 0) > 0) {
-        const panelsToSubtract = Math.floor(featureArea.width! / panelWidthInFeet);
-        panelsNeededHorizontally -= panelsToSubtract;
+    const panelArea = panelWidthInFeet * PANEL_HEIGHT;
+
+    let totalPanelsNeeded;
+    const panelsNeededForWidth = Math.ceil(wallWidth / panelWidthInFeet);
+
+    if (featureArea.subtract) {
+        const wallArea = wallWidth * wallHeight;
+        const featureSqFt = (featureArea.width || 0) * (featureArea.height || 0);
+        const netAreaToCover = wallArea - featureSqFt;
+        totalPanelsNeeded = Math.ceil(netAreaToCover / panelArea);
+    } else {
+        const fullHeightRows = Math.floor(wallHeight / PANEL_HEIGHT);
+        let panelsForHeight = fullHeightRows;
+        const remainingHeight = wallHeight % PANEL_HEIGHT;
+
+        if (remainingHeight > 0) {
+            const piecesPerPanel = Math.floor(PANEL_HEIGHT / remainingHeight);
+            const additionalPanelsForRemainder = Math.ceil(panelsNeededForWidth / piecesPerPanel);
+            totalPanelsNeeded = (panelsForHeight * panelsNeededForWidth) + additionalPanelsForRemainder;
+        } else {
+            totalPanelsNeeded = panelsForHeight * panelsNeededForWidth;
+        }
     }
 
-    const fullHeightRows = Math.floor(wallHeight / PANEL_HEIGHT);
-    const remainingHeight = wallHeight % PANEL_HEIGHT;
-
-    let totalPanelsNeeded = fullHeightRows * panelsNeededHorizontally;
-
-    if (remainingHeight > 0) {
-        const piecesPerPanel = Math.floor(PANEL_HEIGHT / remainingHeight);
-        const additionalPanelsForRemainder = Math.ceil(panelsNeededHorizontally / piecesPerPanel);
-        totalPanelsNeeded += additionalPanelsForRemainder;
-    }
-
-    const generatedPanels = generatePanelsFromStyle(values, Math.ceil(wallWidth / panelWidthInFeet));
-    
+    const generatedPanels = generatePanelsFromStyle(values, panelsNeededForWidth);
     setValue('panels', generatedPanels, { shouldValidate: false, shouldDirty: false });
 
     const clipsPerPanel = values.clipsPerPanel || 3;
