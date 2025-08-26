@@ -1,4 +1,4 @@
-export interface CalculationResults {
+export interface CeilingCalculationResults {
   panels: number;
   crossTees: number;
   mainTees: number;

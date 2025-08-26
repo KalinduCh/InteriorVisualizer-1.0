@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'CeilingCalc Pro',
-  description: 'Calculate materials for your next 2x2 suspended ceiling project.',
+  title: 'DesignPro',
+  description: 'Calculate and visualize materials for your next interior design project.',
 };
 
 export default function RootLayout({

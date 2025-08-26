@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import type { CalculationResults } from "@/types";
+import type { CeilingCalculationResults } from "@/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const formSchema = z.object({
@@ -45,7 +45,7 @@ const formSchema = z.object({
 });
 
 type CalculatorFormProps = {
-  onCalculate: (results: CalculationResults | null) => void;
+  onCalculate: (results: CeilingCalculationResults | null) => void;
   onReset: () => void;
 };
 
@@ -53,8 +53,8 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      length: 12,
-      width: 12,
+      length: undefined,
+      width: undefined,
       panelPrice: 0,
       crossTeePrice: 0,
       mainTeePrice: 0,
@@ -117,7 +117,7 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
     const totalCost = panelsCost + crossTeesCost + mainTeesCost + wallAnglesCost + bindingCost + nailsCost +
                       ledBulbsCost + decorativeBulbsCost + rivetsCost + superNailsCost + siliconeCost + extraCost;
 
-    const results: CalculationResults = {
+    const results: CeilingCalculationResults = {
       panels,
       crossTees,
       mainTees,

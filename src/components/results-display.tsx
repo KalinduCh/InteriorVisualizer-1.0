@@ -1,9 +1,9 @@
-import type { CalculationResults } from "@/types";
+import type { CeilingCalculationResults } from "@/types";
 import ResultCard from "./result-card";
 import { LayoutGrid, Minus, MoveHorizontal, Baseline, Link as LinkIcon, Dot, Lightbulb, PartyPopper, Pin, Construction, Package, CircleDollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function ResultsDisplay({ results }: { results: CalculationResults | null }) {
+export default function ResultsDisplay({ results }: { results: CeilingCalculationResults | null }) {
   if (!results) {
     return (
       <div className="flex items-center justify-center h-full min-h-[400px] bg-card rounded-lg border border-dashed">
