@@ -27,3 +27,21 @@ export interface CeilingCalculationResults {
   siliconeCost?: number;
   extraCost?: number;
 }
+
+export interface WallDesignerCalculationResults {
+  panels6Inch: number;
+  panels1ft: number;
+  clips: number;
+  screws: number;
+  rollPlugs: number;
+  stickers: number;
+  ledStripMeters: number;
+  totalCost?: number;
+
+  // Costs for each item
+  panels6InchCost?: number;
+  panels1ftCost?: number;
+  clipsCost?: number;
+  stickersCost?: number;
+  ledStripCost?: number;
+}
