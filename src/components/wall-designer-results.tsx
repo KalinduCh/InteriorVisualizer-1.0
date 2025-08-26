@@ -1,7 +1,7 @@
 
 import type { WallDesignerCalculationResults } from "@/types";
 import ResultCard from "./result-card";
-import { CircleDollarSign, Cog, LayoutPanelLeft, Lightbulb, Package, Pin, StickyNote, Wrench } from "lucide-react";
+import { CircleDollarSign, Cog, LayoutPanelLeft, Lightbulb, Package, Pin, StickyNote } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -20,7 +20,7 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
   const materials = [
     { name: `Fluted Panels (${results.panelType})`, quantity: results.panelsNeeded, unit: "panels", description: "Required to cover wall width", icon: <LayoutPanelLeft className="w-8 h-8 text-primary" />, cost: results.panelsCost },
     { name: "Clips", quantity: results.clips, unit: "clips", description: "For panel installation", icon: <Cog className="w-8 h-8 text-primary" />, cost: results.clipsCost },
-    { name: "Screws", quantity: results.screws, unit: "screws", description: "For clips", icon: <Wrench className="w-8 h-8 text-primary" /> },
+    { name: "Screws", quantity: results.screws, unit: "screws", description: "For clips", icon: <Package className="w-8 h-8 text-primary" /> },
     { name: "Roll Plugs", quantity: results.rollPlugs, unit: "plugs", description: "For clips", icon: <Pin className="w-8 h-8 text-primary" /> },
   ];
   
@@ -59,3 +59,5 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
     </div>
   );
 }
+
+    

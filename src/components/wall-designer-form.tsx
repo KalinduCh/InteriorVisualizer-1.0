@@ -30,8 +30,8 @@ const panelSchema = z.object({
 });
 
 const stickerSchema = z.object({
-  quantity: z.coerce.number().min(0).optional(),
-  price: z.coerce.number().min(0).optional(),
+  quantity: z.coerce.number().min(0).default(0),
+  price: z.coerce.number().min(0).default(0),
   orientation: z.enum(['vertical', 'horizontal']).default('vertical'),
 });
 
@@ -45,7 +45,7 @@ const formSchema = z.object({
   wallHeight: z.coerce.number().positive({ message: "Height must be a positive number." }).min(1),
   
   panelType: z.enum(['6-inch', '1-ft'], { required_error: "You need to select a panel type."}),
-  panelPrice: z.coerce.number().min(0).optional(),
+  panelPrice: z.coerce.number().min(0).default(0),
   
   designStyle: z.enum(['alternating', 'center-stage', 'gradient-flow', 'custom']).default('alternating'),
   
@@ -59,10 +59,10 @@ const formSchema = z.object({
   panels: z.array(panelSchema),
 
   clipsPerPanel: z.coerce.number().min(3).max(5).default(3),
-  clipPrice: z.coerce.number().min(0).optional(),
+  clipPrice: z.coerce.number().min(0).default(0),
   
-  ledStripLength: z.coerce.number().min(0).optional(), // in feet
-  ledStripPricePerMeter: z.coerce.number().min(0).optional(),
+  ledStripLength: z.coerce.number().min(0).default(0),
+  ledStripPricePerMeter: z.coerce.number().min(0).default(0),
 
   sticker: stickerSchema,
 });
@@ -182,7 +182,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     const ledStripFeet = values.ledStripLength || 0;
     const ledStripMeters = parseFloat((ledStripFeet / 3.281).toFixed(2));
     
-    const stickerCost = (values.sticker.quantity || 0) * (values.sticker.price || 0);
+    const stickerCost = (values.sticker?.quantity || 0) * (values.sticker?.price || 0);
 
     const panelsCost = panelsNeeded * (values.panelPrice || 0);
     const clipsCost = clips * (values.clipPrice || 0);
@@ -247,7 +247,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                 <FormItem>
                   <FormLabel>Wall Width (ft)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g. 10" {...field} step="0.1" onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
+                    <Input type="number" placeholder="e.g. 10" {...field} step="0.1" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -260,7 +260,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                 <FormItem>
                   <FormLabel>Wall Height (ft)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g. 9.5" {...field} step="0.1" onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
+                    <Input type="number" placeholder="e.g. 9.5" {...field} step="0.1" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -395,7 +395,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs">No. of Panels</FormLabel>
-                                    <FormControl><Input type="number" {...field} className="w-24" onChange={(e) => field.onChange(e.target.value === '' ? 0 : +e.target.value)}/></FormControl>
+                                    <FormControl><Input type="number" {...field} className="w-24" value={field.value ?? 0} onChange={(e) => field.onChange(e.target.value === '' ? 0 : +e.target.value)}/></FormControl>
                                 </FormItem>
                             )}
                         />
@@ -501,3 +501,5 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     </Card>
   );
 }
+
+    

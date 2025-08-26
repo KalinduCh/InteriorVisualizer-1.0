@@ -69,3 +69,5 @@ export interface WallDesignerCalculationResults {
   ledStripCost?: number;
   stickerCost?: number;
 }
+
+    
