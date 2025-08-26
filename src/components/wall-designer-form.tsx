@@ -32,7 +32,7 @@ const panelSchema = z.object({
 const featureAreaSchema = z.object({
   width: z.coerce.number().min(0).default(0),
   height: z.coerce.number().min(0).default(0),
-  color: z.enum(['black-gold', 'white-gold']).default('black-gold'),
+  color: z.enum(['black-gold', 'white-gold', 'white-blue-gold', 'white-dark-gold']).default('black-gold'),
   blur: z.boolean().default(true),
   cost: z.coerce.number().min(0).default(0),
 });
@@ -235,12 +235,8 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
 
   useEffect(() => {
     const subscription = watch((values, { name }) => {
-      const relevantChanges = [
-        "wallWidth", "wallHeight", "panelType", "designStyle", 
-        "primaryColor", "secondaryColor", "customPattern", "featureArea",
-        "ledStripLength", "ledColor", "clipsPerPanel"
-      ];
-      if (name && relevantChanges.some(key => name.startsWith(key))) {
+      const priceFields = ['panelPrice', 'clipPrice', 'ledStripPricePerMeter', 'featureArea.cost'];
+       if (name && !priceFields.includes(name) && !name.startsWith('customPattern') ) {
          calculateMaterials(values as z.infer<typeof formSchema>);
       }
     });
@@ -480,7 +476,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                   <div className="grid grid-cols-2 gap-4 p-2 border rounded-md">
                      <FormField control={control} name="featureArea.width" render={({ field }) => (<FormItem><FormLabel>Width (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
                      <FormField control={control} name="featureArea.height" render={({ field }) => (<FormItem><FormLabel>Height (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
-                     <FormField control={control} name="featureArea.color" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Texture</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="black-gold">Black Gold Marble</SelectItem><SelectItem value="white-gold">White Gold Marble</SelectItem></SelectContent></Select></FormItem>)} />
+                     <FormField control={control} name="featureArea.color" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Texture</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="black-gold">Black Gold Marble</SelectItem><SelectItem value="white-gold">White Gold Marble</SelectItem><SelectItem value="white-blue-gold">White Blue Gold</SelectItem><SelectItem value="white-dark-gold">White Dark Gold</SelectItem></SelectContent></Select></FormItem>)} />
                       <FormField control={control} name="featureArea.cost" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Material Cost</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
                      <FormField
                         control={control}

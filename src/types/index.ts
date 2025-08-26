@@ -2,6 +2,7 @@
 
 
 
+
 export interface CeilingCalculationResults {
   panels: number;
   crossTees: number;
@@ -41,7 +42,7 @@ export type Panel = {
 export type FeatureArea = {
   width?: number;
   height?: number;
-  color?: 'black-gold' | 'white-gold';
+  color?: 'black-gold' | 'white-gold' | 'white-blue-gold' | 'white-dark-gold';
   blur?: boolean;
   cost?: number;
 };
