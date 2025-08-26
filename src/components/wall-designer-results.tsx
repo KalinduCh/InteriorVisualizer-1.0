@@ -1,28 +1,31 @@
 
-import type { WallDesignerCalculationResults } from "@/types";
+import type { WallDesignerCalculationResults, OtherItem } from "@/types";
 import ResultCard from "./result-card";
-import { CircleDollarSign, Cog, LayoutPanelLeft, Lightbulb, Pen, Pin, Square, StickyNote, Wrench } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CircleDollarSign, Cog, LayoutPanelLeft, Lightbulb, Package, Pin, Wrench } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/card";
 
 export default function WallDesignerResults({ results }: { results: WallDesignerCalculationResults | null }) {
-  if (!results || (results.panels6Inch === 0 && results.panels1ft === 0 && results.stickers === 0 && results.ledStripMeters === 0)) {
+  if (!results || results.panelsNeeded === 0) {
     return (
       <div className="flex items-center justify-center h-full min-h-[200px] bg-card rounded-lg border border-dashed">
-        <p className="text-muted-foreground text-center p-4">Enter materials in the form to see the required items and costs.</p>
+        <p className="text-muted-foreground text-center p-4">Enter wall dimensions and select a panel type to see results.</p>
       </div>
     );
   }
+  
+  const hasOtherItems = results.otherItems && results.otherItems.length > 0;
+  const hasLed = results.ledStripMeters > 0;
 
   const materials = [
-    { name: "6\" Fluted Panels", quantity: results.panels6Inch, unit: "panels", description: "6 inch width panels", icon: <LayoutPanelLeft className="w-8 h-8 text-primary" />, cost: results.panels6InchCost },
-    { name: "1ft Fluted Panels", quantity: results.panels1ft, unit: "panels", description: "1 ft width panels", icon: <LayoutPanelLeft className="w-8 h-8 text-primary" />, cost: results.panels1ftCost },
+    { name: `Fluted Panels (${results.panelType})`, quantity: results.panelsNeeded, unit: "panels", description: "Required to cover wall width", icon: <LayoutPanelLeft className="w-8 h-8 text-primary" />, cost: results.panelsCost },
     { name: "Clips", quantity: results.clips, unit: "clips", description: "For panel installation", icon: <Cog className="w-8 h-8 text-primary" />, cost: results.clipsCost },
     { name: "Screws", quantity: results.screws, unit: "screws", description: "For clips", icon: <Wrench className="w-8 h-8 text-primary" /> },
     { name: "Roll Plugs", quantity: results.rollPlugs, unit: "plugs", description: "For clips", icon: <Pin className="w-8 h-8 text-primary" /> },
-    { name: "Wall Stickers", quantity: results.stickers, unit: "stickers", description: "4ft x 10ft sheets", icon: <StickyNote className="w-8 h-8 text-primary" />, cost: results.stickersCost },
-    { name: "LED Strip", quantity: results.ledStripMeters, unit: "meters", description: "Lighting strips", icon: <Lightbulb className="w-8 h-8 text-primary" />, cost: results.ledStripCost },
-  ].filter(item => item.quantity && item.quantity > 0);
-
+  ];
+  
+  if (hasLed) {
+    materials.push({ name: "LED Strip", quantity: results.ledStripMeters, unit: "meters", description: "Lighting strips", icon: <Lightbulb className="w-8 h-8 text-primary" />, cost: results.ledStripCost });
+  }
 
   return (
     <div>
@@ -33,6 +36,34 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
         ))}
       </div>
       
+      {hasOtherItems && (
+         <>
+          <h2 className="text-2xl font-bold my-8 text-center md:text-left">Other Items</h2>
+           <Card>
+            <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Item</TableHead>
+                    <TableHead className="text-center">Quantity</TableHead>
+                    <TableHead className="text-right">Unit Price</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {results.otherItems.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className="text-center">{item.quantity}</TableCell>
+                      <TableCell className="text-right">LKR {item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-right">LKR {(item.quantity * item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+           </Card>
+        </>
+      )}
+
       {results.totalCost !== undefined && results.totalCost > 0 && (
         <Card className="mt-8 shadow-lg">
           <CardHeader>
@@ -51,4 +82,3 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
     </div>
   );
 }
-

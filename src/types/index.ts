@@ -29,22 +29,32 @@ export interface CeilingCalculationResults {
   extraCost?: number;
 }
 
+export type OtherItem = {
+  name: string;
+  price: number;
+  quantity: number;
+};
+
 export interface WallDesignerCalculationResults {
   wallWidth: number;
   wallHeight: number;
-  panels6Inch: number;
-  panels1ft: number;
+  panelType: '6-inch' | '1-ft';
+  panelColor: 'white-gold' | 'teak' | 'black-gold';
+  
+  panelsNeeded: number;
   clips: number;
   screws: number;
   rollPlugs: number;
-  stickers: number;
+
   ledStripMeters: number;
+
+  otherItems: OtherItem[];
+  otherItemsTotalCost?: number;
+  
   totalCost?: number;
 
   // Costs for each item
-  panels6InchCost?: number;
-  panels1ftCost?: number;
+  panelsCost?: number;
   clipsCost?: number;
-  stickersCost?: number;
   ledStripCost?: number;
 }

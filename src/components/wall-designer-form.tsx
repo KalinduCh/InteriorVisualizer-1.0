@@ -5,11 +5,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import * as z from "zod";
 import { useEffect, useCallback } from "react";
+import { PlusCircle, Trash2 } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -20,24 +22,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { WallDesignerCalculationResults } from "@/types";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+const otherItemSchema = z.object({
+  name: z.string().min(1, "Item name is required."),
+  quantity: z.coerce.number().min(1, "Quantity must be at least 1."),
+  price: z.coerce.number().min(0, "Price cannot be negative."),
+});
 
 const formSchema = z.object({
   wallWidth: z.coerce.number().positive({ message: "Width must be a positive number." }).min(1),
   wallHeight: z.coerce.number().positive({ message: "Height must be a positive number." }).min(1),
   
-  panel6InchQty: z.coerce.number().min(0).optional(),
-  panel6InchPrice: z.coerce.number().min(0).optional(),
-  panel1ftQty: z.coerce.number().min(0).optional(),
-  panel1ftPrice: z.coerce.number().min(0).optional(),
+  panelType: z.enum(['6-inch', '1-ft'], { required_error: "You need to select a panel type."}),
+  panelPrice: z.coerce.number().min(0).optional(),
   
+  panelColor: z.enum(['white-gold', 'teak', 'black-gold']).default('white-gold'),
+
   clipsPerPanel: z.coerce.number().min(3).max(5).default(3),
   clipPrice: z.coerce.number().min(0).optional(),
   
-  stickerQty: z.coerce.number().min(0).optional(),
-  stickerPrice: z.coerce.number().min(0).optional(),
-
   ledStripLength: z.coerce.number().min(0).optional(), // in feet
   ledStripPricePerMeter: z.coerce.number().min(0).optional(),
+
+  otherItems: z.array(otherItemSchema).optional(),
 });
 
 type WallDesignerFormProps = {
@@ -51,65 +59,65 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     defaultValues: {
       wallWidth: undefined,
       wallHeight: undefined,
-      panel6InchQty: 0,
-      panel6InchPrice: 0,
-      panel1ftQty: 0,
-      panel1ftPrice: 0,
+      panelPrice: 0,
       clipsPerPanel: 3,
       clipPrice: 0,
-      stickerQty: 0,
-      stickerPrice: 0,
       ledStripLength: 0,
       ledStripPricePerMeter: 0,
+      panelColor: 'white-gold',
+      otherItems: [],
     },
   });
 
-  const { handleSubmit, control, reset, watch, getValues } = form;
+  const { control, reset, watch, getValues, handleSubmit } = form;
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "otherItems"
+  });
 
   const calculateMaterials = useCallback((values: z.infer<typeof formSchema>) => {
-    const { wallWidth, wallHeight } = values;
-    if (isNaN(wallWidth) || isNaN(wallHeight) || wallWidth <= 0 || wallHeight <= 0) {
+    const { wallWidth, wallHeight, panelType } = values;
+
+    if (isNaN(wallWidth) || isNaN(wallHeight) || wallWidth <= 0 || wallHeight <= 0 || !panelType) {
       onCalculate(null);
       return;
     }
-
-    const panels6Inch = values.panel6InchQty || 0;
-    const panels1ft = values.panel1ftQty || 0;
-    const totalPanels = panels6Inch + panels1ft;
-    const clipsPerPanel = values.clipsPerPanel || 3;
     
-    const clips = totalPanels * clipsPerPanel;
+    const panelWidthInFeet = panelType === '1-ft' ? 1 : 0.5;
+    const panelsNeeded = Math.ceil(wallWidth / panelWidthInFeet);
+    
+    const clipsPerPanel = values.clipsPerPanel || 3;
+    const clips = panelsNeeded * clipsPerPanel;
     const screws = clips; // 1 screw per clip
     const rollPlugs = clips; // 1 roll plug per clip
-
-    const stickers = values.stickerQty || 0;
     
     const ledStripFeet = values.ledStripLength || 0;
     const ledStripMeters = parseFloat((ledStripFeet / 3.281).toFixed(2));
 
-    const panels6InchCost = panels6Inch * (values.panel6InchPrice || 0);
-    const panels1ftCost = panels1ft * (values.panel1ftPrice || 0);
+    const panelsCost = panelsNeeded * (values.panelPrice || 0);
     const clipsCost = clips * (values.clipPrice || 0);
-    const stickersCost = stickers * (values.stickerPrice || 0);
     const ledStripCost = ledStripMeters * (values.ledStripPricePerMeter || 0);
+    
+    const otherItems = values.otherItems || [];
+    const otherItemsTotalCost = otherItems.reduce((total, item) => total + (item.quantity * item.price), 0);
 
-    const totalCost = panels6InchCost + panels1ftCost + clipsCost + stickersCost + ledStripCost;
+    const totalCost = panelsCost + clipsCost + ledStripCost + otherItemsTotalCost;
     
     const results: WallDesignerCalculationResults = {
       wallWidth,
       wallHeight,
-      panels6Inch,
-      panels1ft,
+      panelType,
+      panelColor: values.panelColor,
+      panelsNeeded,
       clips,
       screws,
       rollPlugs,
-      stickers,
       ledStripMeters,
+      otherItems,
+      otherItemsTotalCost,
       totalCost,
-      panels6InchCost,
-      panels1ftCost,
+      panelsCost,
       clipsCost,
-      stickersCost,
       ledStripCost,
     };
     onCalculate(results);
@@ -132,16 +140,14 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     reset({
       wallWidth: undefined,
       wallHeight: undefined,
-      panel6InchQty: 0,
-      panel6InchPrice: 0,
-      panel1ftQty: 0,
-      panel1ftPrice: 0,
+      panelType: undefined,
+      panelPrice: 0,
       clipsPerPanel: 3,
       clipPrice: 0,
-      stickerQty: 0,
-      stickerPrice: 0,
       ledStripLength: 0,
       ledStripPricePerMeter: 0,
+      panelColor: 'white-gold',
+      otherItems: [],
     });
     onReset();
   }
@@ -187,15 +193,63 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
             <AccordionItem value="item-1">
               <AccordionTrigger>Fluted Panels</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
-                <p className="text-sm text-muted-foreground">Enter the quantity of each panel size you plan to use.</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="panel6InchQty" render={({ field }) => (<FormItem><FormLabel>6" Panels (qty)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                  <FormField control={control} name="panel6InchPrice" render={({ field }) => (<FormItem><FormLabel>Price/Panel</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
-                </div>
-                 <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="panel1ftQty" render={({ field }) => (<FormItem><FormLabel>1ft Panels (qty)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                  <FormField control={control} name="panel1ftPrice" render={({ field }) => (<FormItem><FormLabel>Price/Panel</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
-                </div>
+                 <FormField
+                  control={control}
+                  name="panelType"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>Panel Size</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex flex-col space-y-1"
+                        >
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="6-inch" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              6-inch width
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="1-ft" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              1-ft width
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField control={control} name="panelPrice" render={({ field }) => (<FormItem><FormLabel>Price per Panel</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                <FormField
+                  control={control}
+                  name="panelColor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Panel Color</FormLabel>
+                       <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a color" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="white-gold">White with Gold</SelectItem>
+                          <SelectItem value="teak">Teak</SelectItem>
+                          <SelectItem value="black-gold">Black with Gold</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </AccordionContent>
             </AccordionItem>
             
@@ -228,24 +282,76 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="item-3">
-              <AccordionTrigger>Wall Stickers</AccordionTrigger>
-              <AccordionContent className="space-y-4 pt-4">
-                <p className="text-sm text-muted-foreground">Stickers are 4ft x 10ft.</p>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="stickerQty" render={({ field }) => (<FormItem><FormLabel>Stickers (qty)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                  <FormField control={control} name="stickerPrice" render={({ field }) => (<FormItem><FormLabel>Price/Sticker</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="item-4">
+             <AccordionItem value="item-3">
               <AccordionTrigger>LED Lighting</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
                  <div className="grid grid-cols-2 gap-4">
                   <FormField control={control} name="ledStripLength" render={({ field }) => (<FormItem><FormLabel>LED Strip (ft)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
                   <FormField control={control} name="ledStripPricePerMeter" render={({ field }) => (<FormItem><FormLabel>Price/Meter</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
                 </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-4">
+              <AccordionTrigger>Other Items</AccordionTrigger>
+              <AccordionContent className="space-y-4 pt-4">
+                <div className="space-y-4">
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="grid grid-cols-[1fr_auto_auto_auto] items-end gap-2 p-2 border rounded-md">
+                      <FormField
+                        control={control}
+                        name={`otherItems.${index}.name`}
+                        render={({ field }) => (
+                           <FormItem>
+                            <FormLabel className={index !== 0 ? "sr-only" : ""}>Item Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="e.g. Wall Sticker" />
+                            </FormControl>
+                            <FormMessage />
+                           </FormItem>
+                        )}
+                      />
+                       <FormField
+                        control={control}
+                        name={`otherItems.${index}.quantity`}
+                        render={({ field }) => (
+                           <FormItem>
+                            <FormLabel className={index !== 0 ? "sr-only" : ""}>Qty</FormLabel>
+                            <FormControl>
+                              <Input type="number" {...field} placeholder="1" className="w-20" />
+                            </FormControl>
+                             <FormMessage />
+                           </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={control}
+                        name={`otherItems.${index}.price`}
+                        render={({ field }) => (
+                           <FormItem>
+                            <FormLabel className={index !== 0 ? "sr-only" : ""}>Price/Item</FormLabel>
+                            <FormControl>
+                               <Input type="number" {...field} step="0.01" placeholder="1500.00" className="w-28" />
+                            </FormControl>
+                             <FormMessage />
+                           </FormItem>
+                        )}
+                      />
+                      <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => append({ name: "", quantity: 1, price: 0 })}
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Item
+                </Button>
               </AccordionContent>
             </AccordionItem>
 

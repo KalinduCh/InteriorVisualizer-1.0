@@ -3,6 +3,7 @@
 
 import { WallDesignerCalculationResults } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 type WallVisualizerProps = {
   results: WallDesignerCalculationResults | null;
@@ -10,16 +11,24 @@ type WallVisualizerProps = {
 
 const VISUALIZER_MAX_WIDTH = 800; // in pixels
 
+const colorMap = {
+    'white-gold': 'from-slate-50 to-slate-200',
+    'teak': 'from-yellow-700 to-yellow-900',
+    'black-gold': 'from-gray-800 to-gray-950',
+};
+
+const goldStripe = "absolute top-0 left-1/2 -translate-x-1/2 h-full w-[2px] bg-amber-400/50";
+
 export default function WallVisualizer({ results }: WallVisualizerProps) {
-  if (!results || !results.wallWidth || !results.wallHeight) {
+  if (!results || !results.wallWidth || !results.wallHeight || !results.panelType) {
     return (
        <div className="flex items-center justify-center h-full min-h-[400px] bg-card rounded-lg border border-dashed mb-8">
-          <p className="text-muted-foreground text-center p-4">Enter wall dimensions to start visualizing.</p>
+          <p className="text-muted-foreground text-center p-4">Enter wall dimensions and select a panel type to start visualizing.</p>
         </div>
     );
   }
 
-  const { wallWidth, wallHeight, panels1ft, panels6Inch } = results;
+  const { wallWidth, wallHeight, panelsNeeded, panelColor } = results;
 
   // Calculate the aspect ratio
   const aspectRatio = wallWidth / wallHeight;
@@ -28,15 +37,13 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
   const visualizerWidth = VISUALIZER_MAX_WIDTH;
   const visualizerHeight = visualizerWidth / aspectRatio;
 
-  const totalPanels = (panels1ft || 0) + (panels6Inch || 0);
-
-  if (totalPanels === 0) {
+  if (panelsNeeded === 0) {
      return (
        <div className="mb-8">
         <h3 className="text-lg font-semibold text-center mb-2">2D Visualizer</h3>
         <Card className="relative overflow-hidden" style={{ width: `${visualizerWidth}px`, height: `${visualizerHeight}px`, maxWidth: '100%' }}>
             <CardContent className="p-0 h-full w-full bg-muted/30 flex items-center justify-center">
-                 <p className="text-muted-foreground text-center p-4">Add panels in the form to see them on the wall.</p>
+                 <p className="text-muted-foreground text-center p-4">Calculated panel quantity is zero.</p>
             </CardContent>
         </Card>
         <div className="flex justify-between text-sm text-muted-foreground mt-1">
@@ -47,25 +54,22 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
     );
   }
   
-  // Create an array of panel widths in feet
-  const panelItems = [
-    ...Array(panels1ft || 0).fill(1),
-    ...Array(panels6Inch || 0).fill(0.5),
-  ];
+  const panelWidthPercentage = (1 / panelsNeeded) * 100;
+  const hasGoldStripe = panelColor === 'white-gold' || panelColor === 'black-gold';
 
   return (
     <div className="mb-8">
       <h3 className="text-lg font-semibold text-center mb-2">2D Visualizer</h3>
       <Card className="relative overflow-hidden" style={{ width: `${visualizerWidth}px`, height: `${visualizerHeight}px`, maxWidth: '100%' }}>
         <CardContent className="p-0 h-full w-full bg-muted/30 flex flex-row">
-            {panelItems.map((panelWidth, index) => {
+            {Array.from({ length: panelsNeeded }).map((_, index) => {
                  const panelStyle = {
-                    width: `${(panelWidth / wallWidth) * 100}%`,
+                    width: `${panelWidthPercentage}%`,
                     height: '100%',
                  };
                  return (
-                    <div key={index} className="bg-primary/20 border-r border-primary/50" style={panelStyle}>
-                        <div className="h-full w-full border-2 border-dashed border-primary/30"/>
+                    <div key={index} className={cn("border-r border-black/20 relative bg-gradient-to-r", colorMap[panelColor])} style={panelStyle}>
+                        {hasGoldStripe && <div className={goldStripe} />}
                     </div>
                  )
             })}
