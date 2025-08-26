@@ -2,12 +2,13 @@
 import type { WallDesignerCalculationResults, OtherItem } from "@/types";
 import ResultCard from "./result-card";
 import { CircleDollarSign, Cog, LayoutPanelLeft, Lightbulb, Package, Pin, Wrench } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function WallDesignerResults({ results }: { results: WallDesignerCalculationResults | null }) {
   if (!results || results.panelsNeeded === 0) {
     return (
-      <div className="flex items-center justify-center h-full min-h-[200px] bg-card rounded-lg border border-dashed">
+      <div className="flex items-center justify-center h-full min-h-[200px] bg-card rounded-lg border border-dashed mt-8">
         <p className="text-muted-foreground text-center p-4">Enter wall dimensions and select a panel type to see results.</p>
       </div>
     );
@@ -28,7 +29,7 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
   }
 
   return (
-    <div>
+    <div className="mt-8">
       <h2 className="text-2xl font-bold mb-4 text-center md:text-left">Required Materials</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {materials.map((material) => (
