@@ -198,7 +198,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     let panelsNeededHorizontally = Math.ceil(wallWidth / panelWidthInFeet);
     
     // Subtract panels for feature area if requested
-    if (featureArea && featureArea.subtract && (featureArea.width ?? 0) > 0 && (featureArea.height ?? 0) >= wallHeight) {
+    if (featureArea && featureArea.subtract && (featureArea.width ?? 0) > 0) {
         const panelsToSubtract = Math.floor(featureArea.width! / panelWidthInFeet);
         panelsNeededHorizontally -= panelsToSubtract;
     }
@@ -269,9 +269,19 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     onCalculate(results);
   }, [onCalculate, setValue]);
   
-  const handlePriceChange = () => {
-      calculateMaterials(getValues());
-  }
+  useEffect(() => {
+    const subscription = watch((values, { name, type }) => {
+      // Avoid recursive updates from `setValue` inside `calculateMaterials`
+      if (name !== 'panels') {
+        calculateMaterials(getValues());
+      }
+    });
+
+    // Initial calculation
+    calculateMaterials(getValues());
+
+    return () => subscription.unsubscribe();
+  }, [watch, getValues, calculateMaterials]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     calculateMaterials(values);
@@ -285,12 +295,6 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
   const designStyle = watch('designStyle');
   const useLed = watch('useLed');
   const useTv = watch('tv.enabled');
-
-  useEffect(() => {
-    // Initial calculation on component mount
-    calculateMaterials(getValues());
-  }, []);
-
 
   return (
     <Card className="shadow-lg">
@@ -309,7 +313,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                   <FormItem>
                     <FormLabel>Wall Width (ft)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g. 10" {...field} step="0.1" value={field.value ?? ''} onBlur={() => calculateMaterials(getValues())} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
+                      <Input type="number" placeholder="e.g. 10" {...field} step="0.1" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -322,7 +326,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                   <FormItem>
                     <FormLabel>Wall Height (ft)</FormLabel>
                     <FormControl>
-                      <Input type="number" placeholder="e.g. 9.5" {...field} step="0.1" value={field.value ?? ''} onBlur={() => calculateMaterials(getValues())} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
+                      <Input type="number" placeholder="e.g. 9.5" {...field} step="0.1" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -337,7 +341,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                   <FormLabel>Panel Size</FormLabel>
                   <FormControl>
                     <RadioGroup
-                      onValueChange={(value) => { field.onChange(value); calculateMaterials(getValues()); }}
+                      onValueChange={field.onChange}
                       defaultValue={field.value}
                       className="flex space-x-4"
                     >
@@ -370,14 +374,14 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
               <AccordionTrigger>Panel Configuration</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="panelPrice" render={({ field }) => (<FormItem><FormLabel>Price per Panel</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
+                  <FormField control={control} name="panelPrice" render={({ field }) => (<FormItem><FormLabel>Price per Panel</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" /></FormControl></FormItem>)} />
                   <FormField
                       control={control}
                       name="designStyle"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Design Style</FormLabel>
-                          <Select onValueChange={(value) => { field.onChange(value); setTimeout(() => calculateMaterials(getValues()), 0);}} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a design style" />
@@ -404,7 +408,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>{designStyle === 'solid' ? "Color" : "Primary Color"}</FormLabel>
-                            <Select onValueChange={(value) => { field.onChange(value); setTimeout(() => calculateMaterials(getValues()), 0);}} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                               <SelectContent>
                                 <SelectItem value="white-gold">White with Gold</SelectItem>
@@ -423,7 +427,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Secondary Color</FormLabel>
-                              <Select onValueChange={(value) => { field.onChange(value); setTimeout(() => calculateMaterials(getValues()), 0);}} defaultValue={field.value}>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                                 <SelectContent>
                                   <SelectItem value="white-gold">White with Gold</SelectItem>
@@ -449,12 +453,12 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                             render={({ field }) => (
                                 <FormItem className="flex-grow">
                                     <FormLabel className="text-xs">Color</FormLabel>
-                                    <Select onValueChange={(value) => { field.onChange(value); setTimeout(() => calculateMaterials(getValues()), 0);}} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
                                         <SelectContent>
-                                            <SelectItem value="white-gold">White & Gold</SelectItem>
+                                            <SelectItem value="white-gold">White &amp; Gold</SelectItem>
                                             <SelectItem value="teak">Teak</SelectItem>
-                                            <SelectItem value="black-gold">Black & Gold</SelectItem>
+                                            <SelectItem value="black-gold">Black &amp; Gold</SelectItem>
                                             <SelectItem value="light-brown">Light Brown</SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -467,11 +471,11 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs">No. of Panels</FormLabel>
-                                    <FormControl><Input type="number" {...field} className="w-24" value={field.value ?? 0} onBlur={() => calculateMaterials(getValues())} onChange={(e) => field.onChange(e.target.value === '' ? 0 : +e.target.value)}/></FormControl>
+                                    <FormControl><Input type="number" {...field} className="w-24" value={field.value ?? 0} onChange={(e) => field.onChange(e.target.value === '' ? 0 : +e.target.value)}/></FormControl>
                                 </FormItem>
                             )}
                         />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => { removeCustomPattern(index); setTimeout(() => calculateMaterials(getValues()), 0); }}>
+                        <Button type="button" variant="ghost" size="icon" onClick={() => { removeCustomPattern(index); }}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -501,7 +505,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Clips per Panel</FormLabel>
-                        <Select onValueChange={(value) => { field.onChange(+value); calculateMaterials(getValues()); }} defaultValue={String(field.value)}>
+                        <Select onValueChange={(value) => field.onChange(+value)} defaultValue={String(field.value)}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select clips per panel" />
@@ -518,28 +522,28 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                     )}
                   />
                   <div className="grid grid-cols-3 gap-2">
-                    <FormField control={control} name="clipPrice" render={({ field }) => (<FormItem><FormLabel>Clip Price</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
-                    <FormField control={control} name="screwPrice" render={({ field }) => (<FormItem><FormLabel>Screw Price</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
-                    <FormField control={control} name="plugPrice" render={({ field }) => (<FormItem><FormLabel>Plug Price</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
+                    <FormField control={control} name="clipPrice" render={({ field }) => (<FormItem><FormLabel>Clip Price</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" /></FormControl></FormItem>)} />
+                    <FormField control={control} name="screwPrice" render={({ field }) => (<FormItem><FormLabel>Screw Price</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" /></FormControl></FormItem>)} />
+                    <FormField control={control} name="plugPrice" render={({ field }) => (<FormItem><FormLabel>Plug Price</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" /></FormControl></FormItem>)} />
                   </div>
                  <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="superNails" render={({ field }) => (<FormItem><FormLabel>Super Nails</FormLabel><FormControl><Input type="number" placeholder="Qty" {...field} onBlur={handlePriceChange} /></FormControl></FormItem>)} />
-                  <FormField control={control} name="superNailPrice" render={({ field }) => (<FormItem><FormLabel>Price/Nail</FormLabel><FormControl><Input type="number" placeholder="Price" {...field} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
+                  <FormField control={control} name="superNails" render={({ field }) => (<FormItem><FormLabel>Super Nails</FormLabel><FormControl><Input type="number" placeholder="Qty" {...field} /></FormControl></FormItem>)} />
+                  <FormField control={control} name="superNailPrice" render={({ field }) => (<FormItem><FormLabel>Price/Nail</FormLabel><FormControl><Input type="number" placeholder="Price" {...field} step="0.01" /></FormControl></FormItem>)} />
                 </div>
               </AccordionContent>
             </AccordionItem>
 
              <AccordionItem value="item-3">
-              <AccordionTrigger>Feature Area, TV & Lighting</AccordionTrigger>
+              <AccordionTrigger>Feature Area, TV &amp; Lighting</AccordionTrigger>
               <AccordionContent className="space-y-6 pt-4">
                 <div className="space-y-4 p-2 border rounded-md">
                    <FormLabel>Feature Area</FormLabel>
                   <div className="grid grid-cols-2 gap-4">
-                     <FormField control={control} name="featureArea.width" render={({ field }) => (<FormItem><FormLabel>Width (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={() => calculateMaterials(getValues())} /></FormControl></FormItem>)} />
-                     <FormField control={control} name="featureArea.height" render={({ field }) => (<FormItem><FormLabel>Height (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={() => calculateMaterials(getValues())} /></FormControl></FormItem>)} />
+                     <FormField control={control} name="featureArea.width" render={({ field }) => (<FormItem><FormLabel>Width (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
+                     <FormField control={control} name="featureArea.height" render={({ field }) => (<FormItem><FormLabel>Height (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
                   </div>
-                   <FormField control={control} name="featureArea.color" render={({ field }) => (<FormItem><FormLabel>Texture</FormLabel><Select onValueChange={(value) => { field.onChange(value); calculateMaterials(getValues()); }} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="black-gold">Black Gold Marble</SelectItem><SelectItem value="white-gold">White Gold Marble</SelectItem><SelectItem value="white-blue-gold">White Blue Gold</SelectItem><SelectItem value="white-dark-gold">White Dark Gold</SelectItem></SelectContent></Select></FormItem>)} />
-                   <FormField control={control} name="featureArea.cost" render={({ field }) => (<FormItem><FormLabel>Material Cost</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
+                   <FormField control={control} name="featureArea.color" render={({ field }) => (<FormItem><FormLabel>Texture</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="black-gold">Black Gold Marble</SelectItem><SelectItem value="white-gold">White Gold Marble</SelectItem><SelectItem value="white-blue-gold">White Blue Gold</SelectItem><SelectItem value="white-dark-gold">White Dark Gold</SelectItem></SelectContent></Select></FormItem>)} />
+                   <FormField control={control} name="featureArea.cost" render={({ field }) => (<FormItem><FormLabel>Material Cost</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" /></FormControl></FormItem>)} />
                    <FormField
                       control={control}
                       name="featureArea.blur"
@@ -549,7 +553,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                           <FormControl>
                             <Switch
                               checked={field.value}
-                              onCheckedChange={(checked) => { field.onChange(checked); calculateMaterials(getValues()); }}
+                              onCheckedChange={field.onChange}
                             />
                           </FormControl>
                         </FormItem>
@@ -560,14 +564,11 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                       name="featureArea.subtract"
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg">
-                          <div>
-                            <FormLabel>Subtract Area</FormLabel>
-                            <p className="text-xs text-muted-foreground">Save panels by not covering the wall behind this area.</p>
-                          </div>
+                          <FormLabel>Subtract Area</FormLabel>
                           <FormControl>
                             <Switch
                               checked={field.value}
-                              onCheckedChange={(checked) => { field.onChange(checked); calculateMaterials(getValues()); }}
+                              onCheckedChange={field.onChange}
                             />
                           </FormControl>
                         </FormItem>
@@ -585,7 +586,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                             <FormControl>
                               <Switch
                                 checked={field.value}
-                                onCheckedChange={(checked) => { field.onChange(checked); calculateMaterials(getValues()); }}
+                                onCheckedChange={field.onChange}
                               />
                             </FormControl>
                           </FormItem>
@@ -599,7 +600,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>TV Size (Diagonal)</FormLabel>
-                          <Select onValueChange={(value) => { field.onChange(+value); calculateMaterials(getValues()); }} defaultValue={String(field.value)}>
+                          <Select onValueChange={(value) => field.onChange(+value)} defaultValue={String(field.value)}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select a TV size" />
@@ -631,7 +632,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                             <FormControl>
                               <Switch
                                 checked={field.value}
-                                onCheckedChange={(checked) => { field.onChange(checked); calculateMaterials(getValues()); }}
+                                onCheckedChange={field.onChange}
                               />
                             </FormControl>
                           </FormItem>
@@ -641,8 +642,8 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                    { useLed && (
                     <>
                       <div className="grid grid-cols-2 gap-4">
-                        <FormField control={control} name="ledStripPricePerMeter" render={({ field }) => (<FormItem><FormLabel>Price/Meter</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
-                        <FormField control={control} name="ledColor" render={({ field }) => (<FormItem><FormLabel>LED Color</FormLabel><Select onValueChange={(value) => { field.onChange(value); calculateMaterials(getValues()); }} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="warm-white">Warm White</SelectItem><SelectItem value="cool-white">Cool White</SelectItem></SelectContent></Select></FormItem>)} />
+                        <FormField control={control} name="ledStripPricePerMeter" render={({ field }) => (<FormItem><FormLabel>Price/Meter</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" /></FormControl></FormItem>)} />
+                        <FormField control={control} name="ledColor" render={({ field }) => (<FormItem><FormLabel>LED Color</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="warm-white">Warm White</SelectItem><SelectItem value="cool-white">Cool White</SelectItem></SelectContent></Select></FormItem>)} />
                       </div>
                     </>
                    )}
@@ -652,7 +653,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
              <AccordionItem value="item-4">
               <AccordionTrigger>Labor Cost</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
-                 <FormField control={control} name="laborCost" render={({ field }) => (<FormItem><FormLabel>Estimated Labor Cost</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
+                 <FormField control={control} name="laborCost" render={({ field }) => (<FormItem><FormLabel>Estimated Labor Cost</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" /></FormControl></FormItem>)} />
               </AccordionContent>
              </AccordionItem>
           </Accordion>
@@ -666,3 +667,5 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     </Card>
   );
 }
+
+    
