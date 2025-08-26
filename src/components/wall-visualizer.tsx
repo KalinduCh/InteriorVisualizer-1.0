@@ -1,10 +1,12 @@
 
 'use client';
 
+import { useState } from "react";
 import { WallDesignerCalculationResults } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Tv2 } from "lucide-react";
+import { Tv2, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { Button } from "./ui/button";
 
 type WallVisualizerProps = {
   results: WallDesignerCalculationResults | null;
@@ -50,6 +52,8 @@ const getTvDimensionsInFeet = (diagonalInches: number) => {
 };
 
 export default function WallVisualizer({ results }: WallVisualizerProps) {
+  const [zoom, setZoom] = useState(1);
+  
   if (!results || !results.wallWidth || !results.wallHeight || !results.panels || results.panels.length === 0) {
     return (
        <div className="flex items-center justify-center h-full min-h-[200px] sm:min-h-[400px] bg-card rounded-lg border border-dashed mb-8">
@@ -99,65 +103,80 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
       };
   }
 
-
   return (
     <div className="mb-8 w-full">
-      <h3 className="text-lg font-semibold text-center mb-2">2D Visualizer</h3>
-      <div className="relative mx-auto" style={{ aspectRatio }}>
-        <Card className="relative overflow-hidden h-full w-full">
-          <CardContent className="p-0 h-full w-full bg-muted/30 flex flex-row relative">
-              {panels.map((panel, index) => {
-                  const panelStyle = {
-                      width: `${panelWidthPercentage}%`,
-                      height: '100%',
-                  };
-                  return (
-                      <div key={index} className={cn("border-r border-black/20 relative", panelColorMap[panel.color])} style={panelStyle}>
-                          <div className={cn("absolute inset-0 opacity-50", panelVeinMap[panel.color])} />
-                      </div>
-                  )
-              })}
-              {showJoint && (
-                <div 
-                  className="absolute left-0 w-full h-px bg-red-500 opacity-70"
-                  style={{ top: `${jointPositionPercentage}%` }}
-                  title={`Joint at ${PANEL_HEIGHT_FT} ft`}
-                />
-              )}
-              {hasFeatureArea && (
-                  <div
-                     className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-lg"
-                     style={{
-                        width: `${featureAreaWidth}%`,
-                        height: `${featureAreaHeight}%`,
-                     }}
-                  >
-                    <div className={cn(
-                        "h-full w-full rounded-lg border-2",
-                        featureArea.color && featureAreaColorMap[featureArea.color],
-                        featureArea.blur && 'backdrop-blur-sm bg-opacity-50',
-                        hasLed && ledColor && ledGlowMap[ledColor]
-                    )}>
-                        <div className="w-full h-full flex items-center justify-center relative">
-                             {showTv ? (
-                                 <div 
-                                     className="bg-black rounded-sm border-2 border-gray-700 flex items-center justify-center"
-                                     style={{
-                                         width: `${tvDimensions.widthPercent}%`,
-                                         height: `${tvDimensions.heightPercent}%`,
-                                     }}
-                                 >
-                                    <span className="text-white/50 text-xs md:text-sm">{tv.size}" TV</span>
-                                 </div>
-                             ) : (
-                                <Tv2 className="w-1/3 h-1/3 text-gray-400/50" />
-                             )}
+        <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold text-center">2D Visualizer</h3>
+            <div className="hidden sm:flex items-center gap-2">
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setZoom(z => Math.max(0.2, z - 0.1))}><ZoomOut className="h-4 w-4" /></Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setZoom(z => Math.min(3, z + 0.1))}><ZoomIn className="h-4 w-4" /></Button>
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setZoom(1)}><Maximize2 className="h-4 w-4" /></Button>
+            </div>
+        </div>
+      <div className="relative mx-auto overflow-hidden p-4 bg-muted/20 rounded-lg">
+        <div 
+          className="relative mx-auto transition-transform duration-300"
+          style={{ 
+            aspectRatio,
+            transform: `scale(${zoom})`,
+            transformOrigin: 'center'
+          }}
+        >
+          <Card className="relative overflow-hidden h-full w-full">
+            <CardContent className="p-0 h-full w-full bg-muted/30 flex flex-row relative">
+                {panels.map((panel, index) => {
+                    const panelStyle = {
+                        width: `${panelWidthPercentage}%`,
+                        height: '100%',
+                    };
+                    return (
+                        <div key={index} className={cn("border-r border-black/20 relative", panelColorMap[panel.color])} style={panelStyle}>
+                            <div className={cn("absolute inset-0 opacity-50", panelVeinMap[panel.color])} />
                         </div>
+                    )
+                })}
+                {showJoint && (
+                  <div 
+                    className="absolute left-0 w-full h-px bg-red-500 opacity-70"
+                    style={{ top: `${jointPositionPercentage}%` }}
+                    title={`Joint at ${PANEL_HEIGHT_FT} ft`}
+                  />
+                )}
+                {hasFeatureArea && (
+                    <div
+                       className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-lg"
+                       style={{
+                          width: `${featureAreaWidth}%`,
+                          height: `${featureAreaHeight}%`,
+                       }}
+                    >
+                      <div className={cn(
+                          "h-full w-full rounded-lg border-2",
+                          featureArea.color && featureAreaColorMap[featureArea.color],
+                          featureArea.blur && 'backdrop-blur-sm bg-opacity-50',
+                          hasLed && ledColor && ledGlowMap[ledColor]
+                      )}>
+                          <div className="w-full h-full flex items-center justify-center relative">
+                               {showTv ? (
+                                   <div 
+                                       className="bg-black rounded-sm border-2 border-gray-700 flex items-center justify-center"
+                                       style={{
+                                           width: `${tvDimensions.widthPercent}%`,
+                                           height: `${tvDimensions.heightPercent}%`,
+                                       }}
+                                   >
+                                      <span className="text-white/50 text-xs md:text-sm">{tv.size}" TV</span>
+                                   </div>
+                               ) : (
+                                  <Tv2 className="w-1/3 h-1/3 text-gray-400/50" />
+                               )}
+                          </div>
+                      </div>
                     </div>
-                  </div>
-              )}
-          </CardContent>
-        </Card>
+                )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
       <div className="flex justify-between text-sm text-muted-foreground mt-1 px-1">
         <span>Width: {wallWidth} ft</span>
