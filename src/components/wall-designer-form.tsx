@@ -67,6 +67,7 @@ const formSchema = z.object({
   ledStripPricePerMeter: z.coerce.number().min(0).default(0),
   ledColor: z.enum(['warm-white', 'cool-white']).default('warm-white'),
 
+  laborCost: z.coerce.number().min(0).default(0),
   featureArea: featureAreaSchema,
 });
 
@@ -151,6 +152,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
       ledStripLength: 0,
       ledStripPricePerMeter: 0,
       ledColor: 'warm-white',
+      laborCost: 0,
       featureArea: { width: 5, height: 3, color: 'black-gold', blur: true, cost: 0 },
       designStyle: 'solid',
       primaryColor: 'teak',
@@ -174,46 +176,62 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
       return;
     }
     
+    const PANEL_HEIGHT = 9.5;
     const panelWidthInFeet = panelType === '1-ft' ? 1 : 0.5;
-    const panelsNeeded = Math.ceil(wallWidth / panelWidthInFeet);
-    const generatedPanels = generatePanelsFromStyle(values, panelsNeeded);
     
-    // This is a "controlled" way to update the field array
-    setValue('panels', generatedPanels, { shouldValidate: false, shouldDirty: true });
+    const panelsNeededHorizontally = Math.ceil(wallWidth / panelWidthInFeet);
+    
+    const fullHeightRows = Math.floor(wallHeight / PANEL_HEIGHT);
+    const remainingHeight = wallHeight % PANEL_HEIGHT;
+
+    let totalPanelsNeeded = fullHeightRows * panelsNeededHorizontally;
+
+    if (remainingHeight > 0) {
+        const piecesPerPanel = Math.floor(PANEL_HEIGHT / remainingHeight);
+        const additionalPanelsForRemainder = Math.ceil(panelsNeededHorizontally / piecesPerPanel);
+        totalPanelsNeeded += additionalPanelsForRemainder;
+    }
+
+    const generatedPanels = generatePanelsFromStyle(values, panelsNeededHorizontally);
+    
+    setValue('panels', generatedPanels, { shouldValidate: false, shouldDirty: false });
 
     const clipsPerPanel = values.clipsPerPanel || 3;
-    const clips = panelsNeeded * clipsPerPanel;
-    const screws = clips; // 1 screw per clip
-    const rollPlugs = clips; // 1 roll plug per clip
+    const clips = totalPanelsNeeded * clipsPerPanel;
+    const screws = clips;
+    const rollPlugs = clips;
     
     const ledStripFeet = values.ledStripLength || 0;
     const ledStripMeters = parseFloat((ledStripFeet / 3.281).toFixed(2));
     
     const featureAreaCost = values.featureArea?.cost || 0;
+    const laborCost = values.laborCost || 0;
 
-    const panelsCost = panelsNeeded * (values.panelPrice || 0);
+    const panelsCost = totalPanelsNeeded * (values.panelPrice || 0);
     const clipsCost = clips * (values.clipPrice || 0);
     const ledStripCost = ledStripMeters * (values.ledStripPricePerMeter || 0);
     
-    const totalCost = panelsCost + clipsCost + ledStripCost + featureAreaCost;
+    const totalCost = panelsCost + clipsCost + ledStripCost + featureAreaCost + laborCost;
     
     const results: WallDesignerCalculationResults = {
       wallWidth,
       wallHeight,
       panelType,
       panels: generatedPanels,
-      panelsNeeded,
+      panelsNeeded: totalPanelsNeeded,
       clips,
       screws,
       rollPlugs,
       ledStripMeters,
       ledColor: values.ledColor,
       featureArea: values.featureArea,
+      laborCost: laborCost,
       totalCost,
       panelsCost,
       clipsCost,
       ledStripCost,
       featureAreaCost,
+      laborCost,
     };
     onCalculate(results);
   }, [onCalculate, setValue]);
@@ -235,22 +253,9 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
   const ledStripLength = watch('ledStripLength');
 
   useEffect(() => {
-    const subscription = watch((values, { name }) => {
-      const watchedFields = [
-        'wallWidth', 'wallHeight', 'panelType', 'designStyle', 
-        'primaryColor', 'secondaryColor', 'customPattern', 
-        'clipsPerPanel', 'ledStripLength', 'ledColor', 'featureArea'
-      ];
-      
-      if (name && (watchedFields.includes(name) || name.startsWith('customPattern') || name.startsWith('featureArea'))) {
-         calculateMaterials(values as z.infer<typeof formSchema>);
-      }
-    });
-    // Initial calculation
+    // Initial calculation on component mount
     calculateMaterials(getValues());
-    
-    return () => subscription.unsubscribe();
-  }, [watch, calculateMaterials, getValues]);
+  }, []);
 
 
   return (
@@ -269,7 +274,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                 <FormItem>
                   <FormLabel>Wall Width (ft)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g. 10" {...field} step="0.1" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
+                    <Input type="number" placeholder="e.g. 10" {...field} step="0.1" value={field.value ?? ''} onBlur={() => calculateMaterials(getValues())} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -282,7 +287,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                 <FormItem>
                   <FormLabel>Wall Height (ft)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g. 9.5" {...field} step="0.1" value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
+                    <Input type="number" placeholder="e.g. 9.5" {...field} step="0.1" value={field.value ?? ''} onBlur={() => calculateMaterials(getValues())} onChange={(e) => field.onChange(e.target.value === '' ? undefined : +e.target.value)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -296,7 +301,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                   <FormLabel>Panel Size</FormLabel>
                   <FormControl>
                     <RadioGroup
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => { field.onChange(value); calculateMaterials(getValues()); }}
                       defaultValue={field.value}
                       className="flex space-x-4"
                     >
@@ -335,7 +340,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Design Style</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={(value) => { field.onChange(value); setTimeout(() => calculateMaterials(getValues()), 0);}} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select a design style" />
@@ -361,7 +366,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>{designStyle === 'solid' ? "Color" : "Primary Color"}</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={(value) => { field.onChange(value); setTimeout(() => calculateMaterials(getValues()), 0);}} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
                               <SelectItem value="white-gold">White with Gold</SelectItem>
@@ -380,7 +385,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Secondary Color</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={(value) => { field.onChange(value); setTimeout(() => calculateMaterials(getValues()), 0);}} defaultValue={field.value}>
                               <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                               <SelectContent>
                                 <SelectItem value="white-gold">White with Gold</SelectItem>
@@ -405,7 +410,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                             render={({ field }) => (
                                 <FormItem className="flex-grow">
                                     <FormLabel className="text-xs">Color</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={(value) => { field.onChange(value); setTimeout(() => calculateMaterials(getValues()), 0);}} defaultValue={field.value}>
                                         <FormControl><SelectTrigger><SelectValue/></SelectTrigger></FormControl>
                                         <SelectContent>
                                             <SelectItem value="white-gold">White & Gold</SelectItem>
@@ -423,11 +428,11 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs">No. of Panels</FormLabel>
-                                    <FormControl><Input type="number" {...field} className="w-24" value={field.value ?? 0} onChange={(e) => field.onChange(e.target.value === '' ? 0 : +e.target.value)}/></FormControl>
+                                    <FormControl><Input type="number" {...field} className="w-24" value={field.value ?? 0} onBlur={() => calculateMaterials(getValues())} onChange={(e) => field.onChange(e.target.value === '' ? 0 : +e.target.value)}/></FormControl>
                                 </FormItem>
                             )}
                         />
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeCustomPattern(index)}>
+                        <Button type="button" variant="ghost" size="icon" onClick={() => { removeCustomPattern(index); setTimeout(() => calculateMaterials(getValues()), 0); }}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
@@ -457,7 +462,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Clips per Panel</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(+value)} defaultValue={String(field.value)}>
+                        <Select onValueChange={(value) => { field.onChange(+value); calculateMaterials(getValues()); }} defaultValue={String(field.value)}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select clips per panel" />
@@ -483,9 +488,9 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                 <div className="space-y-2">
                   <FormLabel>Feature Area</FormLabel>
                   <div className="grid grid-cols-2 gap-4 p-2 border rounded-md">
-                     <FormField control={control} name="featureArea.width" render={({ field }) => (<FormItem><FormLabel>Width (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
-                     <FormField control={control} name="featureArea.height" render={({ field }) => (<FormItem><FormLabel>Height (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
-                     <FormField control={control} name="featureArea.color" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Texture</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="black-gold">Black Gold Marble</SelectItem><SelectItem value="white-gold">White Gold Marble</SelectItem><SelectItem value="white-blue-gold">White Blue Gold</SelectItem><SelectItem value="white-dark-gold">White Dark Gold</SelectItem></SelectContent></Select></FormItem>)} />
+                     <FormField control={control} name="featureArea.width" render={({ field }) => (<FormItem><FormLabel>Width (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={() => calculateMaterials(getValues())} /></FormControl></FormItem>)} />
+                     <FormField control={control} name="featureArea.height" render={({ field }) => (<FormItem><FormLabel>Height (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={() => calculateMaterials(getValues())} /></FormControl></FormItem>)} />
+                     <FormField control={control} name="featureArea.color" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Texture</FormLabel><Select onValueChange={(value) => { field.onChange(value); calculateMaterials(getValues()); }} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="black-gold">Black Gold Marble</SelectItem><SelectItem value="white-gold">White Gold Marble</SelectItem><SelectItem value="white-blue-gold">White Blue Gold</SelectItem><SelectItem value="white-dark-gold">White Dark Gold</SelectItem></SelectContent></Select></FormItem>)} />
                       <FormField control={control} name="featureArea.cost" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>Material Cost</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
                      <FormField
                         control={control}
@@ -496,7 +501,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                             <FormControl>
                               <Switch
                                 checked={field.value}
-                                onCheckedChange={field.onChange}
+                                onCheckedChange={(checked) => { field.onChange(checked); calculateMaterials(getValues()); }}
                               />
                             </FormControl>
                           </FormItem>
@@ -507,16 +512,21 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                  <div className="space-y-2">
                    <FormLabel>LED Lighting</FormLabel>
                    <div className="grid grid-cols-2 gap-4 p-2 border rounded-md">
-                    <FormField control={control} name="ledStripLength" render={({ field }) => (<FormItem><FormLabel>LED Strip (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
+                    <FormField control={control} name="ledStripLength" render={({ field }) => (<FormItem><FormLabel>LED Strip (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={() => calculateMaterials(getValues())} /></FormControl></FormItem>)} />
                     <FormField control={control} name="ledStripPricePerMeter" render={({ field }) => (<FormItem><FormLabel>Price/Meter</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
                     {ledStripLength > 0 && (
-                       <FormField control={control} name="ledColor" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>LED Color</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="warm-white">Warm White</SelectItem><SelectItem value="cool-white">Cool White</SelectItem></SelectContent></Select></FormItem>)} />
+                       <FormField control={control} name="ledColor" render={({ field }) => (<FormItem className="col-span-2"><FormLabel>LED Color</FormLabel><Select onValueChange={(value) => { field.onChange(value); calculateMaterials(getValues()); }} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl><SelectContent><SelectItem value="warm-white">Warm White</SelectItem><SelectItem value="cool-white">Cool White</SelectItem></SelectContent></Select></FormItem>)} />
                     )}
                    </div>
                  </div>
               </AccordionContent>
-            </AccordionItem>
-
+             </AccordionItem>
+             <AccordionItem value="item-4">
+              <AccordionTrigger>Labor Cost</AccordionTrigger>
+              <AccordionContent className="space-y-4 pt-4">
+                 <FormField control={control} name="laborCost" render={({ field }) => (<FormItem><FormLabel>Estimated Labor Cost</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
+              </AccordionContent>
+             </AccordionItem>
           </Accordion>
 
           <CardFooter className="flex flex-col sm:flex-row gap-2 pt-6">

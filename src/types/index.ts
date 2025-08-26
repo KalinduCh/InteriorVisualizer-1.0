@@ -1,9 +1,4 @@
 
-
-
-
-
-
 export interface CeilingCalculationResults {
   panels: number;
   crossTees: number;
@@ -69,6 +64,7 @@ export interface WallDesignerCalculationResults {
   
   featureArea: FeatureArea;
   
+  laborCost?: number;
   totalCost?: number;
 
   // Costs for each item
@@ -76,4 +72,5 @@ export interface WallDesignerCalculationResults {
   clipsCost?: number;
   ledStripCost?: number;
   featureAreaCost?: number;
+  laborCost?: number;
 }

@@ -1,9 +1,8 @@
 
 import type { WallDesignerCalculationResults } from "@/types";
 import ResultCard from "./result-card";
-import { CircleDollarSign, Cog, LayoutPanelLeft, Lightbulb, Package, Pin, Tv } from "lucide-react";
+import { CircleDollarSign, Cog, LayoutPanelLeft, Lightbulb, Package, Pin, Tv, HardHat } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function WallDesignerResults({ results }: { results: WallDesignerCalculationResults | null }) {
   if (!results || results.panelsNeeded === 0) {
@@ -16,12 +15,12 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
   
   const hasFeatureArea = results.featureArea && (results.featureArea.width ?? 0) > 0 && (results.featureArea.height ?? 0) > 0;
   const hasLed = results.ledStripMeters > 0;
+  const hasLabor = results.laborCost && results.laborCost > 0;
 
   const materials = [
-    { name: `Fluted Panels (${results.panelType})`, quantity: results.panelsNeeded, unit: "panels", description: "Required to cover wall width", icon: <LayoutPanelLeft className="w-8 h-8 text-primary" />, cost: results.panelsCost },
+    { name: `Fluted Panels (${results.panelType})`, quantity: results.panelsNeeded, unit: "panels", description: "Accounts for cutting & waste", icon: <LayoutPanelLeft className="w-8 h-8 text-primary" />, cost: results.panelsCost },
     { name: "Clips", quantity: results.clips, unit: "clips", description: "For panel installation", icon: <Cog className="w-8 h-8 text-primary" />, cost: results.clipsCost },
-    { name: "Screws", quantity: results.screws, unit: "screws", description: "For clips", icon: <Package className="w-8 h-8 text-primary" /> },
-    { name: "Roll Plugs", quantity: results.rollPlugs, unit: "plugs", description: "For clips", icon: <Pin className="w-8 h-8 text-primary" /> },
+    { name: "Screws & Plugs", quantity: results.screws, unit: "sets", description: "For clips", icon: <Package className="w-8 h-8 text-primary" /> },
   ];
   
   if (hasLed) {
@@ -30,11 +29,14 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
   if (hasFeatureArea) {
     materials.push({ name: "Feature Area", quantity: 1, unit: "area", description: `${results.featureArea.width}ft x ${results.featureArea.height}ft`, icon: <Tv className="w-8 h-8 text-primary" />, cost: results.featureAreaCost });
   }
+  if (hasLabor) {
+    materials.push({ name: "Labor", quantity: 1, unit: "cost", description: "Estimated labor charges", icon: <HardHat className="w-8 h-8 text-primary" />, cost: results.laborCost });
+  }
 
 
   return (
     <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4 text-center md:text-left">Required Materials</h2>
+      <h2 className="text-2xl font-bold mb-4 text-center md:text-left">Required Materials & Costs</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {materials.map((material) => (
           <ResultCard key={material.name} {...material} description={material.description}/>
@@ -53,6 +55,7 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
             <span className="text-5xl font-bold text-accent">
               LKR {results.totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
+            <p className="text-sm text-muted-foreground mt-1">Includes materials and estimated labor.</p>
           </CardContent>
         </Card>
       )}
