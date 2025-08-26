@@ -11,6 +11,8 @@ type WallVisualizerProps = {
 };
 
 const VISUALIZER_MAX_WIDTH = 800; // in pixels
+const PANEL_HEIGHT_FT = 9.5;
+
 
 const panelColorMap = {
     'white-gold': 'bg-[conic-gradient(at_top,_var(--tw-gradient-stops))] from-gray-50 via-gray-100 to-gray-200',
@@ -74,6 +76,9 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
   const panelWidthPercentage = (1 / panels.length) * 100;
   const hasFeatureArea = featureArea && (featureArea.width ?? 0) > 0 && (featureArea.height ?? 0) > 0;
   const hasLed = ledStripMeters > 0;
+  const showJoint = wallHeight > PANEL_HEIGHT_FT;
+  const jointPositionPercentage = showJoint ? (PANEL_HEIGHT_FT / wallHeight) * 100 : 0;
+
 
   const featureAreaWidth = hasFeatureArea ? (featureArea.width! / wallWidth) * 100 : 0;
   const featureAreaHeight = hasFeatureArea ? (featureArea.height! / wallHeight) * 100 : 0;
@@ -96,6 +101,13 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
                       </div>
                   )
               })}
+              {showJoint && (
+                <div 
+                  className="absolute left-0 w-full h-px bg-red-500 opacity-70"
+                  style={{ top: `${jointPositionPercentage}%` }}
+                  title={`Joint at ${PANEL_HEIGHT_FT} ft`}
+                />
+              )}
               {hasFeatureArea && (
                   <div
                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center rounded-lg"
