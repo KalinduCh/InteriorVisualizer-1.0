@@ -24,13 +24,13 @@ const panelVeinMap = {
     'black-gold': 'bg-[linear-gradient(105deg,transparent_0%,transparent_45%,#e5a52d_50%,transparent_55%,transparent_100%),linear-gradient(15deg,transparent_0%,transparent_45%,#9ca3af_50%,transparent_55%,transparent_100%)]',
 }
 
-
 const featureAreaColorMap = {
-    'white-gold': 'bg-gradient-to-br from-slate-50 to-slate-200 border-slate-300',
-    'white-blue': 'bg-gradient-to-br from-sky-50 to-sky-200 border-sky-300',
-    'black': 'bg-black border-gray-700',
-    'texture': 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-600 via-gray-800 to-black border-gray-600',
+    'white-gold': 'bg-white border-slate-300 bg-[linear-gradient(135deg,rgba(230,165,45,0.15)_0%,transparent_20%),linear-gradient(-45deg,rgba(200,200,200,0.2)_20%,transparent_100%)]',
+    'white-blue': 'bg-white border-sky-300 bg-[linear-gradient(135deg,rgba(56,189,248,0.15)_0%,transparent_20%),linear-gradient(-45deg,rgba(200,220,255,0.2)_20%,transparent_100%)]',
+    'black': 'bg-gray-900 border-gray-700 bg-[linear-gradient(135deg,rgba(230,165,45,0.2)_0%,transparent_30%),linear-gradient(-45deg,rgba(255,255,255,0.1)_20%,transparent_100%)]',
+    'texture': 'bg-gray-800 border-gray-600 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops)),linear-gradient(135deg,rgba(230,165,45,0.2)_0%,transparent_30%),linear-gradient(-45deg,rgba(255,255,255,0.1)_20%,transparent_100%)] from-gray-700 via-gray-900 to-black',
 };
+
 
 const ledGlowMap = {
     'warm-white': 'shadow-[0_0_25px_8px_rgba(255,214,148,0.6)]',
