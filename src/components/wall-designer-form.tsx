@@ -21,8 +21,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { WallDesignerCalculationResults } from "@/types";
+import type { WallDesignerCalculationResults, Panel, OtherItem } from "@/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+const panelSchema = z.object({
+  color: z.enum(['white-gold', 'teak', 'black-gold']).default('white-gold'),
+});
 
 const otherItemSchema = z.object({
   name: z.string().min(1, "Item name is required."),
@@ -37,7 +41,7 @@ const formSchema = z.object({
   panelType: z.enum(['6-inch', '1-ft'], { required_error: "You need to select a panel type."}),
   panelPrice: z.coerce.number().min(0).optional(),
   
-  panelColor: z.enum(['white-gold', 'teak', 'black-gold']).default('white-gold'),
+  panels: z.array(panelSchema),
 
   clipsPerPanel: z.coerce.number().min(3).max(5).default(3),
   clipPrice: z.coerce.number().min(0).optional(),
@@ -60,17 +64,23 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
       wallWidth: undefined,
       wallHeight: undefined,
       panelPrice: 0,
+      panels: [],
       clipsPerPanel: 3,
       clipPrice: 0,
       ledStripLength: 0,
       ledStripPricePerMeter: 0,
-      panelColor: 'white-gold',
       otherItems: [],
     },
   });
 
-  const { control, reset, watch, getValues, handleSubmit } = form;
-  const { fields, append, remove } = useFieldArray({
+  const { control, reset, watch, getValues, handleSubmit, setValue } = form;
+  
+  const { fields: panelFields, replace: replacePanels } = useFieldArray({
+    control,
+    name: "panels"
+  });
+
+  const { fields: otherItemFields, append: appendOtherItem, remove: removeOtherItem } = useFieldArray({
     control,
     name: "otherItems"
   });
@@ -107,7 +117,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
       wallWidth,
       wallHeight,
       panelType,
-      panelColor: values.panelColor,
+      panels: values.panels,
       panelsNeeded,
       clips,
       screws,
@@ -123,6 +133,26 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     onCalculate(results);
   }, [onCalculate]);
   
+  const wallWidth = watch('wallWidth');
+  const wallHeight = watch('wallHeight');
+  const panelType = watch('panelType');
+
+  useEffect(() => {
+    if (wallWidth && wallHeight && panelType) {
+      const panelWidthInFeet = panelType === '1-ft' ? 1 : 0.5;
+      const panelsNeeded = Math.ceil(wallWidth / panelWidthInFeet);
+      const currentPanels = getValues('panels');
+      
+      if (panelsNeeded !== currentPanels.length) {
+          const newPanels = Array.from({ length: panelsNeeded }, (_, i) => {
+              return currentPanels[i] || { color: 'white-gold' };
+          });
+          replacePanels(newPanels);
+      }
+    }
+  }, [wallWidth, wallHeight, panelType, getValues, replacePanels]);
+
+
   useEffect(() => {
     const subscription = watch((values) => {
       calculateMaterials(values as z.infer<typeof formSchema>);
@@ -142,13 +172,14 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
       wallHeight: undefined,
       panelType: undefined,
       panelPrice: 0,
+      panels: [],
       clipsPerPanel: 3,
       clipPrice: 0,
       ledStripLength: 0,
       ledStripPricePerMeter: 0,
-      panelColor: 'white-gold',
       otherItems: [],
     });
+    replacePanels([]);
     onReset();
   }
 
@@ -187,69 +218,75 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                 </FormItem>
               )}
             />
+             <FormField
+              control={control}
+              name="panelType"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Panel Size</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-1"
+                    >
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="6-inch" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          6-inch width
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="1-ft" />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          1-ft width
+                        </FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </CardContent>
 
           <Accordion type="multiple" className="w-full px-6" defaultValue={['item-1', 'item-2', 'item-3', 'item-4']}>
             <AccordionItem value="item-1">
-              <AccordionTrigger>Fluted Panels</AccordionTrigger>
+              <AccordionTrigger>Panel Configuration</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
-                 <FormField
-                  control={control}
-                  name="panelType"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel>Panel Size</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex flex-col space-y-1"
-                        >
-                          <FormItem className="flex items-center space-x-3 space-y-0">
+                 <FormField control={control} name="panelPrice" render={({ field }) => (<FormItem><FormLabel>Price per Panel</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                  {panelFields.length > 0 && <FormLabel>Panel Colors</FormLabel>}
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  {panelFields.map((field, index) => (
+                    <FormField
+                      key={field.id}
+                      control={control}
+                      name={`panels.${index}.color`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="font-normal text-xs">Panel {index + 1}</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <RadioGroupItem value="6-inch" />
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a color" />
+                              </SelectTrigger>
                             </FormControl>
-                            <FormLabel className="font-normal">
-                              6-inch width
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="1-ft" />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              1-ft width
-                            </FormLabel>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField control={control} name="panelPrice" render={({ field }) => (<FormItem><FormLabel>Price per Panel</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
-                <FormField
-                  control={control}
-                  name="panelColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Panel Color</FormLabel>
-                       <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a color" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="white-gold">White with Gold</SelectItem>
-                          <SelectItem value="teak">Teak</SelectItem>
-                          <SelectItem value="black-gold">Black with Gold</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                            <SelectContent>
+                              <SelectItem value="white-gold">White with Gold</SelectItem>
+                              <SelectItem value="teak">Teak</SelectItem>
+                              <SelectItem value="black-gold">Black with Gold</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                  </div>
               </AccordionContent>
             </AccordionItem>
             
@@ -296,14 +333,14 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
               <AccordionTrigger>Other Items</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
                 <div className="space-y-4">
-                  {fields.map((field, index) => (
-                    <div key={field.id} className="grid grid-cols-[1fr_auto_auto_auto] items-end gap-2 p-2 border rounded-md">
-                      <FormField
+                  {otherItemFields.map((field, index) => (
+                    <div key={field.id} className="p-2 border rounded-md space-y-2">
+                       <FormField
                         control={control}
                         name={`otherItems.${index}.name`}
                         render={({ field }) => (
                            <FormItem>
-                            <FormLabel className={index !== 0 ? "sr-only" : ""}>Item Name</FormLabel>
+                            <FormLabel>Item Name</FormLabel>
                             <FormControl>
                               <Input {...field} placeholder="e.g. Wall Sticker" />
                             </FormControl>
@@ -311,35 +348,40 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                            </FormItem>
                         )}
                       />
-                       <FormField
-                        control={control}
-                        name={`otherItems.${index}.quantity`}
-                        render={({ field }) => (
-                           <FormItem>
-                            <FormLabel className={index !== 0 ? "sr-only" : ""}>Qty</FormLabel>
-                            <FormControl>
-                              <Input type="number" {...field} placeholder="1" className="w-20" />
-                            </FormControl>
-                             <FormMessage />
-                           </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={control}
-                        name={`otherItems.${index}.price`}
-                        render={({ field }) => (
-                           <FormItem>
-                            <FormLabel className={index !== 0 ? "sr-only" : ""}>Price/Item</FormLabel>
-                            <FormControl>
-                               <Input type="number" {...field} step="0.01" placeholder="1500.00" className="w-28" />
-                            </FormControl>
-                             <FormMessage />
-                           </FormItem>
-                        )}
-                      />
-                      <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <div className="flex gap-2">
+                         <FormField
+                          control={control}
+                          name={`otherItems.${index}.quantity`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel>Qty</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} placeholder="1" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={control}
+                          name={`otherItems.${index}.price`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <FormLabel>Price/Item</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} step="0.01" placeholder="1500.00" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                         <FormItem>
+                            <FormLabel className="opacity-0">Remove</FormLabel>
+                             <Button type="button" variant="ghost" size="icon" onClick={() => removeOtherItem(index)} className="mt-2">
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                          </FormItem>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -347,7 +389,8 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => append({ name: "", quantity: 1, price: 0 })}
+                  className="mt-4"
+                  onClick={() => appendOtherItem({ name: "", quantity: 1, price: 0 })}
                 >
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Add Item

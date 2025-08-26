@@ -1,4 +1,5 @@
 
+
 export interface CeilingCalculationResults {
   panels: number;
   crossTees: number;
@@ -29,6 +30,12 @@ export interface CeilingCalculationResults {
   extraCost?: number;
 }
 
+export type PanelColor = 'white-gold' | 'teak' | 'black-gold';
+
+export type Panel = {
+  color: PanelColor;
+};
+
 export type OtherItem = {
   name: string;
   price: number;
@@ -39,8 +46,8 @@ export interface WallDesignerCalculationResults {
   wallWidth: number;
   wallHeight: number;
   panelType: '6-inch' | '1-ft';
-  panelColor: 'white-gold' | 'teak' | 'black-gold';
   
+  panels: Panel[];
   panelsNeeded: number;
   clips: number;
   screws: number;
