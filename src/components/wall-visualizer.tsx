@@ -13,11 +13,16 @@ type WallVisualizerProps = {
 const VISUALIZER_MAX_WIDTH = 800; // in pixels
 
 const panelColorMap = {
-    'white-gold': 'from-slate-50 to-slate-200',
-    'teak': 'from-yellow-700 to-yellow-900',
-    'black-gold': 'from-gray-800 to-gray-950',
+    'white-gold': 'bg-[conic-gradient(at_top,_var(--tw-gradient-stops))] from-gray-50 via-gray-100 to-gray-200',
+    'teak': 'bg-gradient-to-b from-yellow-700 via-yellow-800 to-yellow-900',
+    'black-gold': 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-gray-900 to-black',
 };
-const panelGoldStripe = "absolute top-0 left-1/2 -translate-x-1/2 h-full w-[2px] bg-amber-400/50";
+
+const panelVeinMap = {
+    'white-gold': 'bg-[linear-gradient(105deg,transparent_0%,transparent_45%,#e5a52d_50%,transparent_55%,transparent_100%),linear-gradient(15deg,transparent_0%,transparent_45%,#d1d5db_50%,transparent_55%,transparent_100%)]',
+    'teak': '',
+    'black-gold': 'bg-[linear-gradient(105deg,transparent_0%,transparent_45%,#e5a52d_50%,transparent_55%,transparent_100%),linear-gradient(15deg,transparent_0%,transparent_45%,#9ca3af_50%,transparent_55%,transparent_100%)]',
+}
 
 
 const featureAreaColorMap = {
@@ -83,10 +88,9 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
                       width: `${panelWidthPercentage}%`,
                       height: '100%',
                   };
-                  const hasGoldStripe = panel.color === 'white-gold' || panel.color === 'black-gold';
                   return (
-                      <div key={index} className={cn("border-r border-black/20 relative bg-gradient-to-r", panelColorMap[panel.color])} style={panelStyle}>
-                          {hasGoldStripe && <div className={panelGoldStripe} />}
+                      <div key={index} className={cn("border-r border-black/20 relative", panelColorMap[panel.color])} style={panelStyle}>
+                          <div className={cn("absolute inset-0 opacity-50", panelVeinMap[panel.color])} />
                       </div>
                   )
               })}
