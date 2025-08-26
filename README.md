@@ -10,7 +10,8 @@ The application features two main tools:
 
 - **Dynamic Material Calculation:** Instantly calculates the required quantity of panels, tees, clips, screws, and other materials based on user-provided dimensions.
 - **Cost Estimation:** Provides a detailed cost breakdown for all materials, including optional items and labor, helping users budget effectively.
-- **Interactive 2D Visualizer:** The Wall Designer includes a real-time visualizer that renders a 2D preview of the feature wall, including panel colors, textures, feature areas, and even a preview of a mounted TV.
+- **Interactive 2D Visualizer:** The Wall Designer includes a real-time visualizer that renders a 2D preview of the feature wall.
+  - **How it works:** This feature is built as a responsive React component. It takes the calculated results (wall dimensions, panel configuration, TV size, etc.) as props and dynamically renders the scene. The overall container maintains the wall's aspect ratio, while the individual fluted panels are laid out using CSS Flexbox. Panel textures, feature area patterns, and even the TV preview are generated using advanced, multi-layered CSS gradients and inline styles, eliminating the need for external images and ensuring instantaneous updates as the user modifies the design.
 - **Waste Optimization Logic:** The calculator for wall panels intelligently computes the number of panels needed, accounting for cuts and minimizing waste for rooms taller than the standard panel height.
 - **Customizable Designs:** Users can choose from various design styles (Solid, Alternating, Custom Patterns) and a palette of panel colors and textures.
 - **Responsive Design:** A mobile-first interface ensures a seamless experience across all devices.
