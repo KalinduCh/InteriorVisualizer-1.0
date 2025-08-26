@@ -110,12 +110,15 @@ function generatePanelsFromStyle(values: z.infer<typeof formSchema>, panelsNeede
             if (!customPattern || customPattern.length === 0) {
                  return Array.from({ length: panelsNeeded }, () => ({ color: 'white-gold' }));
             }
-            for (const segment of customPattern) {
+            let patternIndex = 0;
+            while(panels.length < panelsNeeded && customPattern.length > 0) {
+                const segment = customPattern[patternIndex % customPattern.length];
                 for (let i = 0; i < segment.panels; i++) {
-                    if (panels.length < panelsNeeded) {
+                    if(panels.length < panelsNeeded) {
                         panels.push({ color: segment.color });
                     }
                 }
+                patternIndex++;
             }
             // Fill remaining panels if custom pattern is not enough
             while(panels.length < panelsNeeded) {
@@ -169,7 +172,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     const generatedPanels = generatePanelsFromStyle(values, panelsNeeded);
     
     // This is a "controlled" way to update the field array
-    setValue('panels', generatedPanels, { shouldValidate: false, shouldDirty: false });
+    setValue('panels', generatedPanels, { shouldValidate: true, shouldDirty: true });
 
     const clipsPerPanel = values.clipsPerPanel || 3;
     const clips = panelsNeeded * clipsPerPanel;
@@ -392,7 +395,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-xs">No. of Panels</FormLabel>
-                                    <FormControl><Input type="number" {...field} className="w-24"/></FormControl>
+                                    <FormControl><Input type="number" {...field} className="w-24" onChange={(e) => field.onChange(e.target.value === '' ? 0 : +e.target.value)}/></FormControl>
                                 </FormItem>
                             )}
                         />
