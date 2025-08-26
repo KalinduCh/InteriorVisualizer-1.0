@@ -59,6 +59,9 @@ export interface WallDesignerCalculationResults {
   screws: number;
   rollPlugs: number;
 
+  superNails?: number;
+  silicone?: number;
+
   ledStripMeters: number;
   ledColor?: 'warm-white' | 'cool-white';
   
@@ -70,6 +73,8 @@ export interface WallDesignerCalculationResults {
   // Costs for each item
   panelsCost?: number;
   clipsCost?: number;
+  superNailsCost?: number;
+  siliconeCost?: number;
   ledStripCost?: number;
   featureAreaCost?: number;
   laborCost?: number;

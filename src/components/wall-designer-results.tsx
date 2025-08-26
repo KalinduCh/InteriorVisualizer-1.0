@@ -23,6 +23,14 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
     { name: "Screws & Plugs", quantity: results.screws, unit: "sets", description: "For clips", icon: <Package className="w-8 h-8 text-primary" /> },
   ];
   
+  if (results.superNails && results.superNails > 0) {
+    materials.push({ name: "Super Nails", quantity: results.superNails, unit: "nails", description: "For extra strength", icon: <Pin className="w-8 h-8 text-primary" />, cost: results.superNailsCost });
+  }
+
+  if (results.silicone && results.silicone > 0) {
+    materials.push({ name: "Silicone", quantity: results.silicone, unit: "tubes", description: "For sealing", icon: <Package className="w-8 h-8 text-primary" />, cost: results.siliconeCost });
+  }
+
   if (hasLed) {
     materials.push({ name: "LED Strip", quantity: results.ledStripMeters, unit: "meters", description: "Lighting strips", icon: <Lightbulb className="w-8 h-8 text-primary" />, cost: results.ledStripCost });
   }
