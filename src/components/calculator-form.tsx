@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -243,28 +244,28 @@ export default function CalculatorForm({ onCalculate, onReset }: CalculatorFormP
               <AccordionTrigger>Optional Items</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="ledBulbs" render={({ field }) => (<FormItem><FormLabel>LED Bulbs (qty)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                  <FormField control={control} name="ledBulbPrice" render={({ field }) => (<FormItem><FormLabel>Price/Bulb</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                  <FormField control={control} name="ledBulbs" render={({ field }) => (<FormItem><FormLabel>LED Bulbs</FormLabel><FormControl><Input type="number" placeholder="Qty" {...field} /></FormControl></FormItem>)} />
+                  <FormField control={control} name="ledBulbPrice" render={({ field }) => (<FormItem><FormLabel>Price/Bulb</FormLabel><FormControl><Input type="number" placeholder="Price" {...field} step="0.01" /></FormControl></FormItem>)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="decorativeBulbs" render={({ field }) => (<FormItem><FormLabel>Decorative Bulbs (qty)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                  <FormField control={control} name="decorativeBulbPrice" render={({ field }) => (<FormItem><FormLabel>Price/Bulb</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                  <FormField control={control} name="decorativeBulbs" render={({ field }) => (<FormItem><FormLabel>Deco Bulbs</FormLabel><FormControl><Input type="number" placeholder="Qty" {...field} /></FormControl></FormItem>)} />
+                  <FormField control={control} name="decorativeBulbPrice" render={({ field }) => (<FormItem><FormLabel>Price/Bulb</FormLabel><FormControl><Input type="number" placeholder="Price" {...field} step="0.01" /></FormControl></FormItem>)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="rivets" render={({ field }) => (<FormItem><FormLabel>Rivets (qty)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                  <FormField control={control} name="rivetPrice" render={({ field }) => (<FormItem><FormLabel>Price/Rivet</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                  <FormField control={control} name="rivets" render={({ field }) => (<FormItem><FormLabel>Rivets</FormLabel><FormControl><Input type="number" placeholder="Qty" {...field} /></FormControl></FormItem>)} />
+                  <FormField control={control} name="rivetPrice" render={({ field }) => (<FormItem><FormLabel>Price/Rivet</FormLabel><FormControl><Input type="number" placeholder="Price" {...field} step="0.01" /></FormControl></FormItem>)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="superNails" render={({ field }) => (<FormItem><FormLabel>Super Nails (qty)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                  <FormField control={control} name="superNailPrice" render={({ field }) => (<FormItem><FormLabel>Price/Nail</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                  <FormField control={control} name="superNails" render={({ field }) => (<FormItem><FormLabel>Super Nails</FormLabel><FormControl><Input type="number" placeholder="Qty" {...field} /></FormControl></FormItem>)} />
+                  <FormField control={control} name="superNailPrice" render={({ field }) => (<FormItem><FormLabel>Price/Nail</FormLabel><FormControl><Input type="number" placeholder="Price" {...field} step="0.01" /></FormControl></FormItem>)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="silicone" render={({ field }) => (<FormItem><FormLabel>Silicone (tubes)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                  <FormField control={control} name="siliconePrice" render={({ field }) => (<FormItem><FormLabel>Price/Tube</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                  <FormField control={control} name="silicone" render={({ field }) => (<FormItem><FormLabel>Silicone</FormLabel><FormControl><Input type="number" placeholder="Tubes" {...field} /></FormControl></FormItem>)} />
+                  <FormField control={control} name="siliconePrice" render={({ field }) => (<FormItem><FormLabel>Price/Tube</FormLabel><FormControl><Input type="number" placeholder="Price" {...field} step="0.01" /></FormControl></FormItem>)} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="extra" render={({ field }) => (<FormItem><FormLabel>Extra Item (qty)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>)} />
-                  <FormField control={control} name="extraPrice" render={({ field }) => (<FormItem><FormLabel>Price/Item</FormLabel><FormControl><Input type="number" {...field} step="0.01" /></FormControl></FormItem>)} />
+                  <FormField control={control} name="extra" render={({ field }) => (<FormItem><FormLabel>Extra Item</FormLabel><FormControl><Input type="number" placeholder="Qty" {...field} /></FormControl></FormItem>)} />
+                  <FormField control={control} name="extraPrice" render={({ field }) => (<FormItem><FormLabel>Price/Item</FormLabel><FormControl><Input type="number" placeholder="Price" {...field} step="0.01" /></FormControl></FormItem>)} />
                 </div>
               </AccordionContent>
             </AccordionItem>
