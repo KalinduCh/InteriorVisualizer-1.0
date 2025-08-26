@@ -26,7 +26,7 @@ export default function ResultCard({ icon, name, quantity, unit, description, co
       </CardHeader>
       <CardContent className="pt-0">
         <div>
-          <span className="text-5xl font-bold text-accent">{quantity.toLocaleString()}</span>
+          <span className="text-4xl md:text-5xl font-bold text-accent">{quantity.toLocaleString()}</span>
           <span className="text-muted-foreground text-lg ml-1">{unit}</span>
         </div>
         {cost !== undefined && cost > 0 && (

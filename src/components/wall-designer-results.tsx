@@ -1,7 +1,8 @@
 
 import type { WallDesignerCalculationResults } from "@/types";
 import ResultCard from "./result-card";
-import { CircleDollarSign, Cog, LayoutPanelLeft, Lightbulb, Package, Pin, Tv, HardHat } from "lucide-react";
+import WallDesignerListItem from "./wall-designer-list-item";
+import { CircleDollarSign, Cog, LayoutPanelLeft, Lightbulb, Package, Pin, Tv, HardHat, Construction } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function WallDesignerResults({ results }: { results: WallDesignerCalculationResults | null }) {
@@ -18,34 +19,65 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
   const hasLabor = results.laborCost && results.laborCost > 0;
 
   const materials = [
-    { name: `Fluted Panels (${results.panelType})`, quantity: results.panelsNeeded, unit: "panels", description: "Accounts for cutting & waste", icon: <LayoutPanelLeft className="w-8 h-8 text-primary" />, cost: results.panelsCost },
-    { name: "Clips", quantity: results.clips, unit: "clips", description: "For panel installation", icon: <Cog className="w-8 h-8 text-primary" />, cost: results.clipsCost },
-    { name: "Screws", quantity: results.screws, unit: "screws", description: "For clips", icon: <Package className="w-8 h-8 text-primary" />, cost: results.screwsCost },
-    { name: "Roll Plugs", quantity: results.rollPlugs, unit: "plugs", description: "For screws", icon: <Package className="w-8 h-8 text-primary" />, cost: results.plugsCost },
+    { name: `Fluted Panels (${results.panelType})`, quantity: results.panelsNeeded, unit: "panels", description: "Accounts for cutting & waste", icon: <LayoutPanelLeft className="w-6 h-6 text-primary" />, cost: results.panelsCost },
+    { name: "Clips", quantity: results.clips, unit: "clips", description: "For panel installation", icon: <Cog className="w-6 h-6 text-primary" />, cost: results.clipsCost },
+    { name: "Screws", quantity: results.screws, unit: "screws", description: "For clips", icon: <Construction className="w-6 h-6 text-primary" />, cost: results.screwsCost },
+    { name: "Roll Plugs", quantity: results.rollPlugs, unit: "plugs", description: "For screws", icon: <Package className="w-6 h-6 text-primary" />, cost: results.plugsCost },
   ];
   
   if (results.superNails && results.superNails > 0) {
-    materials.push({ name: "Super Nails", quantity: results.superNails, unit: "nails", description: "For extra strength", icon: <Pin className="w-8 h-8 text-primary" />, cost: results.superNailsCost });
+    materials.push({ name: "Super Nails", quantity: results.superNails, unit: "nails", description: "For extra strength", icon: <Pin className="w-6 h-6 text-primary" />, cost: results.superNailsCost });
   }
 
   if (hasLed) {
-    materials.push({ name: "LED Strip", quantity: results.ledStripMeters, unit: "meters", description: "Lighting strips", icon: <Lightbulb className="w-8 h-8 text-primary" />, cost: results.ledStripCost });
+    materials.push({ name: "LED Strip", quantity: results.ledStripMeters, unit: "meters", description: `Around Feature Area (${results.ledColor})`, icon: <Lightbulb className="w-6 h-6 text-primary" />, cost: results.ledStripCost });
   }
   if (hasFeatureArea) {
-    materials.push({ name: "Feature Area", quantity: 1, unit: "area", description: `${results.featureArea.width}ft x ${results.featureArea.height}ft`, icon: <Tv className="w-8 h-8 text-primary" />, cost: results.featureAreaCost });
+    materials.push({ name: "Feature Area", quantity: 1, unit: "area", description: `${results.featureArea.width}ft x ${results.featureArea.height}ft`, icon: <Tv className="w-6 h-6 text-primary" />, cost: results.featureAreaCost });
   }
   if (hasLabor) {
-    materials.push({ name: "Labor", quantity: 1, unit: "cost", description: "Estimated labor charges", icon: <HardHat className="w-8 h-8 text-primary" />, cost: results.laborCost });
+    materials.push({ name: "Labor", quantity: 1, unit: "cost", description: "Estimated labor charges", icon: <HardHat className="w-6 h-6 text-primary" />, cost: results.laborCost });
   }
 
 
   return (
     <div className="mt-8">
       <h2 className="text-2xl font-bold mb-4 text-center md:text-left">Required Materials & Costs</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      
+      {/* Grid for larger screens */}
+      <div className="hidden sm:grid grid-cols-2 xl:grid-cols-3 gap-4">
         {materials.map((material) => (
-          <ResultCard key={material.name} {...material} description={material.description}/>
+           <ResultCard 
+            key={material.name} 
+            name={material.name} 
+            quantity={material.quantity} 
+            unit={material.unit} 
+            icon={material.icon} 
+            description={material.description} 
+            cost={material.cost}
+          />
         ))}
+      </div>
+      
+      {/* List for smaller screens */}
+      <div className="sm:hidden space-y-2">
+        <Card>
+          <CardContent className="p-0">
+             <ul className="divide-y">
+                {materials.map((material, index) => (
+                  <WallDesignerListItem
+                    key={material.name}
+                    name={material.name}
+                    quantity={material.quantity}
+                    unit={material.unit}
+                    icon={material.icon}
+                    description={material.description}
+                    cost={material.cost}
+                  />
+                ))}
+            </ul>
+          </CardContent>
+        </Card>
       </div>
       
       {results.totalCost !== undefined && results.totalCost > 0 && (
@@ -57,7 +89,7 @@ export default function WallDesignerResults({ results }: { results: WallDesigner
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <span className="text-5xl font-bold text-accent">
+            <span className="text-4xl md:text-5xl font-bold text-accent">
               LKR {results.totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             <p className="text-sm text-muted-foreground mt-1">Includes materials and estimated labor.</p>

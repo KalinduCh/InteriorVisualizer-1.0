@@ -10,7 +10,6 @@ type WallVisualizerProps = {
   results: WallDesignerCalculationResults | null;
 };
 
-const VISUALIZER_MAX_WIDTH = 800; // in pixels
 const PANEL_HEIGHT_FT = 9.5;
 
 
@@ -29,12 +28,11 @@ const panelVeinMap = {
 }
 
 const featureAreaColorMap = {
-    'black-gold': "bg-gray-900 border-gray-600 bg-[linear-gradient(145deg,transparent_20%,rgba(0,0,0,0.8)_20.2%,rgba(0,0,0,0.8)_29.8%,transparent_30%),linear-gradient(35deg,transparent_30%,rgba(212,175,55,0.6)_30.2%,rgba(212,175,55,0.8)_35.1%,transparent_35.5%),linear-gradient(35deg,transparent_60%,rgba(212,175,55,0.6)_60.2%,rgba(212,175,55,0.8)_65.1%,transparent_65.5%),radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_0%,rgba(255,255,255,0)_80%)]",
+    'black-gold': "bg-gray-800 border-gray-600 bg-[linear-gradient(145deg,transparent_20%,rgba(0,0,0,0.8)_20.2%,rgba(0,0,0,0.8)_29.8%,transparent_30%),linear-gradient(35deg,transparent_30%,rgba(212,175,55,0.6)_30.2%,rgba(212,175,55,0.8)_35.1%,transparent_35.5%),linear-gradient(35deg,transparent_60%,rgba(212,175,55,0.6)_60.2%,rgba(212,175,55,0.8)_65.1%,transparent_65.5%),radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_0%,rgba(255,255,255,0)_80%)]",
     'white-gold': "bg-gray-50 border-gray-300 bg-[linear-gradient(145deg,transparent_20%,rgba(100,100,100,0.8)_20.1%,rgba(10,10,10,0.9)_29.9%,transparent_30.1%),linear-gradient(35deg,transparent_30%,rgba(212,175,55,0.6)_30.2%,rgba(212,175,55,0.8)_35.1%,transparent_35.5%),linear-gradient(35deg,transparent_60%,rgba(212,175,55,0.6)_60.2%,rgba(212,175,55,0.8)_65.1%,transparent_65.5%),radial-gradient(circle_at_20%_80%,rgba(0,0,0,0.2)_0%,rgba(0,0,0,0)_50%)]",
     'white-blue-gold': "bg-white border-blue-200 bg-[repeating-linear-gradient(45deg,_transparent,_transparent_80px,_rgba(218,165,32,0.5)_82px,_transparent_85px),repeating-linear-gradient(60deg,_transparent,_transparent_100px,_rgba(30,144,255,0.3)_102px,_transparent_105px)] mix-blend-multiply",
     'white-dark-gold': "bg-gray-200 border-yellow-700 bg-[repeating-linear-gradient(45deg,_transparent,_transparent_100px,_rgba(184,134,11,0.6)_102px,_transparent_105px),repeating-linear-gradient(70deg,_transparent,_transparent_70px,_rgba(160,82,45,0.3)_72px,_transparent_75px)] mix-blend-multiply"
 };
-
 
 const ledGlowMap = {
     'warm-white': 'shadow-[0_0_25px_8px_rgba(255,214,148,0.6)]',
@@ -54,7 +52,7 @@ const getTvDimensionsInFeet = (diagonalInches: number) => {
 export default function WallVisualizer({ results }: WallVisualizerProps) {
   if (!results || !results.wallWidth || !results.wallHeight || !results.panels || results.panels.length === 0) {
     return (
-       <div className="flex items-center justify-center h-full min-h-[400px] bg-card rounded-lg border border-dashed mb-8">
+       <div className="flex items-center justify-center h-full min-h-[200px] sm:min-h-[400px] bg-card rounded-lg border border-dashed mb-8">
           <p className="text-muted-foreground text-center p-4">Enter wall dimensions and select a panel type to start visualizing.</p>
         </div>
     );
@@ -63,14 +61,12 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
   const { wallWidth, wallHeight, panels, featureArea, ledStripMeters, ledColor, tv } = results;
 
   const aspectRatio = wallWidth / wallHeight;
-  const visualizerWidth = VISUALIZER_MAX_WIDTH;
-  const visualizerHeight = visualizerWidth / aspectRatio;
-
+  
   if (panels.length === 0) {
      return (
-       <div className="mb-8">
+       <div className="mb-8 w-full">
         <h3 className="text-lg font-semibold text-center mb-2">2D Visualizer</h3>
-        <Card className="relative overflow-hidden" style={{ width: `${visualizerWidth}px`, height: `${visualizerHeight}px`, maxWidth: '100%' }}>
+        <Card className="relative overflow-hidden w-full" style={{ aspectRatio }}>
             <CardContent className="p-0 h-full w-full bg-muted/30 flex items-center justify-center">
                  <p className="text-muted-foreground text-center p-4">Calculated panel quantity is zero.</p>
             </CardContent>
@@ -105,9 +101,9 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
 
 
   return (
-    <div className="mb-8">
+    <div className="mb-8 w-full">
       <h3 className="text-lg font-semibold text-center mb-2">2D Visualizer</h3>
-      <div className="relative" style={{ width: `${visualizerWidth}px`, height: `${visualizerHeight}px`, maxWidth: '100%' }}>
+      <div className="relative mx-auto" style={{ aspectRatio }}>
         <Card className="relative overflow-hidden h-full w-full">
           <CardContent className="p-0 h-full w-full bg-muted/30 flex flex-row relative">
               {panels.map((panel, index) => {
@@ -151,10 +147,10 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
                                          height: `${tvDimensions.heightPercent}%`,
                                      }}
                                  >
-                                    <span className="text-white/50 text-xs">{tv.size}" TV</span>
+                                    <span className="text-white/50 text-xs md:text-sm">{tv.size}" TV</span>
                                  </div>
                              ) : (
-                                <Tv2 className="w-1/2 h-1/2 text-gray-400/50" />
+                                <Tv2 className="w-1/3 h-1/3 text-gray-400/50" />
                              )}
                         </div>
                     </div>
