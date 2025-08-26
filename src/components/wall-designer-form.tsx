@@ -4,7 +4,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFieldArray } from "react-hook-form";
 import * as z from "zod";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { PlusCircle, Trash2 } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
@@ -46,10 +46,10 @@ const formSchema = z.object({
   panelType: z.enum(['6-inch', '1-ft'], { required_error: "You need to select a panel type."}),
   panelPrice: z.coerce.number().min(0).default(0),
   
-  designStyle: z.enum(['alternating', 'center-stage', 'gradient-flow', 'custom']).default('alternating'),
+  designStyle: z.enum(['solid', 'alternating', 'center-stage', 'gradient-flow', 'custom']).default('solid'),
   
   // For presets
-  primaryColor: z.enum(['white-gold', 'teak', 'black-gold']).default('black-gold'),
+  primaryColor: z.enum(['white-gold', 'teak', 'black-gold']).default('teak'),
   secondaryColor: z.enum(['white-gold', 'teak', 'black-gold']).default('white-gold'),
   
   // For custom pattern
@@ -77,6 +77,8 @@ function generatePanelsFromStyle(values: z.infer<typeof formSchema>, panelsNeede
     if (panelsNeeded <= 0) return [];
 
     switch (designStyle) {
+        case 'solid':
+            return Array.from({ length: panelsNeeded }, () => ({ color: primaryColor }));
         case 'alternating':
             return Array.from({ length: panelsNeeded }, (_, i) => ({
                 color: i % 2 === 0 ? primaryColor : secondaryColor,
@@ -144,8 +146,8 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
       ledStripLength: 0,
       ledStripPricePerMeter: 0,
       sticker: { quantity: 0, price: 0, orientation: 'vertical' },
-      designStyle: 'alternating',
-      primaryColor: 'black-gold',
+      designStyle: 'solid',
+      primaryColor: 'teak',
       secondaryColor: 'white-gold',
       customPattern: [{ color: 'black-gold', panels: 3 }, { color: 'white-gold', panels: 2 }],
     },
@@ -223,6 +225,18 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
   }
   
   const designStyle = watch('designStyle');
+
+  // Recalculate when relevant fields change
+  const watchedFields = watch([
+      'wallWidth', 'wallHeight', 'panelType', 'designStyle', 
+      'primaryColor', 'secondaryColor', 'customPattern', 
+      'clipsPerPanel', 'ledStripLength', 'sticker.quantity', 'sticker.orientation'
+  ]);
+
+  useEffect(() => {
+    calculateMaterials(getValues());
+  }, [watchedFields, calculateMaterials, getValues]);
+
 
   return (
     <Card className="shadow-lg">
@@ -313,6 +327,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
+                            <SelectItem value="solid">Solid Color</SelectItem>
                             <SelectItem value="alternating">Alternating</SelectItem>
                             <SelectItem value="center-stage">Center Stage</SelectItem>
                             <SelectItem value="gradient-flow">Gradient Flow</SelectItem>
@@ -342,23 +357,25 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={control}
-                      name="secondaryColor"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Secondary Color</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                            <SelectContent>
-                              <SelectItem value="white-gold">White with Gold</SelectItem>
-                              <SelectItem value="teak">Teak</SelectItem>
-                              <SelectItem value="black-gold">Black with Gold</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      )}
-                    />
+                    <div className={cn(designStyle === 'solid' ? "hidden" : "space-y-4")}>
+                      <FormField
+                        control={control}
+                        name="secondaryColor"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Secondary Color</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                <SelectItem value="white-gold">White with Gold</SelectItem>
+                                <SelectItem value="teak">Teak</SelectItem>
+                                <SelectItem value="black-gold">Black with Gold</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                 </div>
                 
                 <div className={cn("space-y-4", designStyle !== 'custom' ? "hidden" : "")}>
@@ -446,7 +463,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
               <AccordionTrigger>LED Lighting</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
                  <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="ledStripLength" render={({ field }) => (<FormItem><FormLabel>LED Strip (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={handlePriceChange} /></FormControl></FormItem>)} />
+                  <FormField control={control} name="ledStripLength" render={({ field }) => (<FormItem><FormLabel>LED Strip (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
                   <FormField control={control} name="ledStripPricePerMeter" render={({ field }) => (<FormItem><FormLabel>Price/Meter</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange}/></FormControl></FormItem>)} />
                 </div>
               </AccordionContent>
@@ -456,7 +473,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
               <AccordionTrigger>Wall Stickers</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
                  <div className="grid grid-cols-2 gap-4">
-                    <FormField control={control} name="sticker.quantity" render={({ field }) => (<FormItem><FormLabel>Sticker Quantity</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={handlePriceChange} /></FormControl></FormItem>)} />
+                    <FormField control={control} name="sticker.quantity" render={({ field }) => (<FormItem><FormLabel>Sticker Quantity</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
                     <FormField control={control} name="sticker.price" render={({ field }) => (<FormItem><FormLabel>Price/Sticker</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
                  </div>
                  <FormField
