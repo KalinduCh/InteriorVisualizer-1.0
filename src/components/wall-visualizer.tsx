@@ -122,7 +122,7 @@ export default function WallVisualizer({ results }: WallVisualizerProps) {
             transformOrigin: 'center'
           }}
         >
-          <Card className="relative overflow-hidden h-full w-full">
+          <Card className="relative overflow-hidden h-full w-full border">
             <CardContent className="p-0 h-full w-full bg-muted/30 flex flex-row relative">
                 {panels.map((panel, index) => {
                     const panelStyle = {
