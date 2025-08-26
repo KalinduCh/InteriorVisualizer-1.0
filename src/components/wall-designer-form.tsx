@@ -226,16 +226,17 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
   
   const designStyle = watch('designStyle');
 
-  // Recalculate when relevant fields change
-  const watchedFields = watch([
-      'wallWidth', 'wallHeight', 'panelType', 'designStyle', 
-      'primaryColor', 'secondaryColor', 'customPattern', 
-      'clipsPerPanel', 'ledStripLength', 'sticker.quantity', 'sticker.orientation'
-  ]);
+  // Trigger calculation when dimensions or style changes
+  const wallWidth = watch('wallWidth');
+  const wallHeight = watch('wallHeight');
+  const panelType = watch('panelType');
+  const primaryColor = watch('primaryColor');
+  const secondaryColor = watch('secondaryColor');
+  const customPattern = watch('customPattern');
 
   useEffect(() => {
     calculateMaterials(getValues());
-  }, [watchedFields, calculateMaterials, getValues]);
+  }, [wallWidth, wallHeight, panelType, designStyle, primaryColor, secondaryColor, customPattern, calculateMaterials, getValues]);
 
 
   return (
@@ -463,7 +464,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
               <AccordionTrigger>LED Lighting</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
                  <div className="grid grid-cols-2 gap-4">
-                  <FormField control={control} name="ledStripLength" render={({ field }) => (<FormItem><FormLabel>LED Strip (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
+                  <FormField control={control} name="ledStripLength" render={({ field }) => (<FormItem><FormLabel>LED Strip (ft)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={handlePriceChange}/></FormControl></FormItem>)} />
                   <FormField control={control} name="ledStripPricePerMeter" render={({ field }) => (<FormItem><FormLabel>Price/Meter</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange}/></FormControl></FormItem>)} />
                 </div>
               </AccordionContent>
@@ -473,7 +474,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
               <AccordionTrigger>Wall Stickers</AccordionTrigger>
               <AccordionContent className="space-y-4 pt-4">
                  <div className="grid grid-cols-2 gap-4">
-                    <FormField control={control} name="sticker.quantity" render={({ field }) => (<FormItem><FormLabel>Sticker Quantity</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} /></FormControl></FormItem>)} />
+                    <FormField control={control} name="sticker.quantity" render={({ field }) => (<FormItem><FormLabel>Sticker Quantity</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} onBlur={handlePriceChange} /></FormControl></FormItem>)} />
                     <FormField control={control} name="sticker.price" render={({ field }) => (<FormItem><FormLabel>Price/Sticker</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? 0} step="0.01" onBlur={handlePriceChange} /></FormControl></FormItem>)} />
                  </div>
                  <FormField
