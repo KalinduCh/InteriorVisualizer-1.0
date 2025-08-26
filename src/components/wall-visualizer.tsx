@@ -16,12 +16,14 @@ const panelColorMap = {
     'white-gold': 'bg-[conic-gradient(at_top,_var(--tw-gradient-stops))] from-gray-50 via-gray-100 to-gray-200',
     'teak': 'bg-gradient-to-b from-yellow-700 via-yellow-800 to-yellow-900',
     'black-gold': 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-gray-900 to-black',
+    'light-brown': 'bg-gradient-to-b from-amber-200 via-amber-300 to-amber-400',
 };
 
 const panelVeinMap = {
     'white-gold': 'bg-[linear-gradient(105deg,transparent_0%,transparent_45%,#e5a52d_50%,transparent_55%,transparent_100%),linear-gradient(15deg,transparent_0%,transparent_45%,#d1d5db_50%,transparent_55%,transparent_100%)]',
     'teak': '',
     'black-gold': 'bg-[linear-gradient(105deg,transparent_0%,transparent_45%,#e5a52d_50%,transparent_55%,transparent_100%),linear-gradient(15deg,transparent_0%,transparent_45%,#9ca3af_50%,transparent_55%,transparent_100%)]',
+    'light-brown': 'bg-[linear-gradient(105deg,transparent_0%,transparent_48%,#a16207_50%,transparent_52%,transparent_100%)] opacity-30',
 }
 
 const featureAreaColorMap = {

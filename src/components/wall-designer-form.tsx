@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 
 const panelSchema = z.object({
-  color: z.enum(['white-gold', 'teak', 'black-gold']).default('white-gold'),
+  color: z.enum(['white-gold', 'teak', 'black-gold', 'light-brown']).default('white-gold'),
 });
 
 const featureAreaSchema = z.object({
@@ -38,7 +38,7 @@ const featureAreaSchema = z.object({
 });
 
 const customPatternSegmentSchema = z.object({
-  color: z.enum(['white-gold', 'teak', 'black-gold']).default('white-gold'),
+  color: z.enum(['white-gold', 'teak', 'black-gold', 'light-brown']).default('white-gold'),
   panels: z.coerce.number().min(1),
 });
 
@@ -52,8 +52,8 @@ const formSchema = z.object({
   designStyle: z.enum(['solid', 'alternating', 'center-stage', 'gradient-flow', 'custom']).default('solid'),
   
   // For presets
-  primaryColor: z.enum(['white-gold', 'teak', 'black-gold']).default('teak'),
-  secondaryColor: z.enum(['white-gold', 'teak', 'black-gold']).default('white-gold'),
+  primaryColor: z.enum(['white-gold', 'teak', 'black-gold', 'light-brown']).default('teak'),
+  secondaryColor: z.enum(['white-gold', 'teak', 'black-gold', 'light-brown']).default('white-gold'),
   
   // For custom pattern
   customPattern: z.array(customPatternSegmentSchema),
@@ -178,7 +178,8 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     const panelsNeeded = Math.ceil(wallWidth / panelWidthInFeet);
     const generatedPanels = generatePanelsFromStyle(values, panelsNeeded);
     
-    values.panels = generatedPanels;
+    // This is a "controlled" way to update the field array
+    setValue('panels', generatedPanels, { shouldValidate: false, shouldDirty: true });
 
     const clipsPerPanel = values.clipsPerPanel || 3;
     const clips = panelsNeeded * clipsPerPanel;
@@ -215,7 +216,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
       featureAreaCost,
     };
     onCalculate(results);
-  }, [onCalculate]);
+  }, [onCalculate, setValue]);
   
   const handlePriceChange = () => {
       calculateMaterials(getValues());
@@ -235,8 +236,13 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
 
   useEffect(() => {
     const subscription = watch((values, { name }) => {
-      const priceFields = ['panelPrice', 'clipPrice', 'ledStripPricePerMeter', 'featureArea.cost'];
-       if (name && !priceFields.includes(name) && !name.startsWith('customPattern') ) {
+      const watchedFields = [
+        'wallWidth', 'wallHeight', 'panelType', 'designStyle', 
+        'primaryColor', 'secondaryColor', 'customPattern', 
+        'clipsPerPanel', 'ledStripLength', 'ledColor', 'featureArea'
+      ];
+      
+      if (name && (watchedFields.includes(name) || name.startsWith('customPattern') || name.startsWith('featureArea'))) {
          calculateMaterials(values as z.infer<typeof formSchema>);
       }
     });
@@ -354,13 +360,14 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                       name="primaryColor"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Primary Color</FormLabel>
+                          <FormLabel>{designStyle === 'solid' ? "Color" : "Primary Color"}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                             <SelectContent>
                               <SelectItem value="white-gold">White with Gold</SelectItem>
                               <SelectItem value="teak">Teak</SelectItem>
                               <SelectItem value="black-gold">Black with Gold</SelectItem>
+                              <SelectItem value="light-brown">Light Brown</SelectItem>
                             </SelectContent>
                           </Select>
                         </FormItem>
@@ -379,6 +386,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                                 <SelectItem value="white-gold">White with Gold</SelectItem>
                                 <SelectItem value="teak">Teak</SelectItem>
                                 <SelectItem value="black-gold">Black with Gold</SelectItem>
+                                <SelectItem value="light-brown">Light Brown</SelectItem>
                               </SelectContent>
                             </Select>
                           </FormItem>
@@ -403,6 +411,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
                                             <SelectItem value="white-gold">White & Gold</SelectItem>
                                             <SelectItem value="teak">Teak</SelectItem>
                                             <SelectItem value="black-gold">Black & Gold</SelectItem>
+                                            <SelectItem value="light-brown">Light Brown</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </FormItem>

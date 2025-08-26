@@ -3,6 +3,7 @@
 
 
 
+
 export interface CeilingCalculationResults {
   panels: number;
   crossTees: number;
@@ -33,7 +34,7 @@ export interface CeilingCalculationResults {
   extraCost?: number;
 }
 
-export type PanelColor = 'white-gold' | 'teak' | 'black-gold';
+export type PanelColor = 'white-gold' | 'teak' | 'black-gold' | 'light-brown';
 
 export type Panel = {
   color: PanelColor;
