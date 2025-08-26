@@ -196,25 +196,30 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     const panelWidthInFeet = panelType === '1-ft' ? 1 : 0.5;
     const panelArea = panelWidthInFeet * PANEL_HEIGHT;
 
-    let totalPanelsNeeded;
     const panelsNeededForWidth = Math.ceil(wallWidth / panelWidthInFeet);
+    let totalPanelsNeeded = 0;
 
-    if (featureArea.subtract) {
-        const wallArea = wallWidth * wallHeight;
-        const featureSqFt = (featureArea.width || 0) * (featureArea.height || 0);
-        const netAreaToCover = wallArea - featureSqFt;
-        totalPanelsNeeded = Math.ceil(netAreaToCover / panelArea);
+    if (wallHeight <= PANEL_HEIGHT) {
+        // Simple case: Wall is not taller than panels
+        totalPanelsNeeded = panelsNeededForWidth;
     } else {
-        const fullHeightRows = Math.floor(wallHeight / PANEL_HEIGHT);
-        let panelsForHeight = fullHeightRows;
-        const remainingHeight = wallHeight % PANEL_HEIGHT;
-
-        if (remainingHeight > 0) {
-            const piecesPerPanel = Math.floor(PANEL_HEIGHT / remainingHeight);
-            const additionalPanelsForRemainder = Math.ceil(panelsNeededForWidth / piecesPerPanel);
-            totalPanelsNeeded = (panelsForHeight * panelsNeededForWidth) + additionalPanelsForRemainder;
+        // Complex case: Wall is taller than panels, requiring cuts
+        const fullPanelsForStrips = panelsNeededForWidth;
+        const extensionHeight = wallHeight - PANEL_HEIGHT;
+        if (extensionHeight > 0) {
+            const extensionsPerPanel = Math.floor(PANEL_HEIGHT / extensionHeight);
+            const panelsForExtensions = Math.ceil(panelsNeededForWidth / extensionsPerPanel);
+            totalPanelsNeeded = fullPanelsForStrips + panelsForExtensions;
         } else {
-            totalPanelsNeeded = panelsForHeight * panelsNeededForWidth;
+            totalPanelsNeeded = fullPanelsForStrips;
+        }
+    }
+    
+    if (featureArea.subtract) {
+        const featureSqFt = (featureArea.width || 0) * (featureArea.height || 0);
+        if (featureSqFt > 0) {
+            const panelsToSubtract = Math.ceil(featureSqFt / panelArea);
+            totalPanelsNeeded = Math.max(0, totalPanelsNeeded - panelsToSubtract);
         }
     }
 
@@ -670,5 +675,7 @@ export default function WallDesignerForm({ onCalculate, onReset }: WallDesignerF
     </Card>
   );
 }
+
+    
 
     
